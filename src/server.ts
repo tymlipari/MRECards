@@ -18,11 +18,15 @@ dotenv.config();
 
 // Start listening for connections, and serve static files
 const server = new WebHost({
-	// Uncomment below to deploy locally
+	// Uncomment below to deploy locally (PC only)
 	// baseUrl: 'http://localhost:3901',
+
+	// Uncomment below to deploy locally (Hololens or VR Headset only)
+	// baseUrl: 'http://<ngrok-id>.ngrok.io'
+	baseUrl: 'http://75953b8b.ngrok.io',
 	
 	// Uncomment below to deploy to Azure
-	baseUrl: 'https://mrecards.azurewebsites.net',
+	// baseUrl: 'https://mrecards.azurewebsites.net',
 	
 	port: process.env.PORT,
 	baseDir: resolvePath(__dirname, '../public')
