@@ -23,10 +23,9 @@ const server = new WebHost({
 
 	// Uncomment below to deploy locally (Hololens or VR Headset only)
 	// baseUrl: 'http://<ngrok-id>.ngrok.io'
-	baseUrl: 'http://75953b8b.ngrok.io',
 	
 	// Uncomment below to deploy to Azure
-	// baseUrl: 'https://mrecards.azurewebsites.net',
+	baseUrl: 'https://mrecards.azurewebsites.net',
 	
 	port: process.env.PORT,
 	baseDir: resolvePath(__dirname, '../public')
