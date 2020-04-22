@@ -52,8 +52,7 @@ export default class Deck {
 	}
 
 	public CreateActor(assetContainer: MRE.AssetContainer, baseUrl: string): MRE.Actor {
-		if (this.actor !== null)
-			throw new Error("Actor already created! Access with .actor");
+		if (this.actor !== null) { throw new Error("Actor already created! Access with .actor"); }
 
 		const deckScale = { x: 0.002, y: 0.002, z: 0.002 };
 		const deckRotation = MRE.Quaternion.FromEulerAngles(-Math.PI / 2, 0, 0);
