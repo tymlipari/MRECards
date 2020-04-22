@@ -4,12 +4,15 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import Deck from './deck';
+import Table from './table';
 
 /**
  * Cards Application - Attaches a cube to each avatar's hand.
  */
 export default class Cards {
-	private text: MRE.Actor = null; 
+	private assetContainer: MRE.AssetContainer = null;
+	private deck: Deck = null;
 	// Container for all cubes attached to avatars' hands
 	private attachedCubes = new Map<MRE.Guid, MRE.Actor[]>();
 
@@ -19,6 +22,8 @@ export default class Cards {
 	 * @param baseUrl The baseUrl to this project's `./public` folder.
 	 */
 	constructor(private context: MRE.Context, private baseUrl: string) {
+		this.assetContainer = new MRE.AssetContainer(this.context);
+
 		// Hook the context events we're interested in.
 		this.context.onStarted(() => this.started());
 		this.context.onUserJoined(user => this.userJoined(user));
@@ -29,22 +34,9 @@ export default class Cards {
 	 * Once the context is "started", initialize the app.
 	 */
 	private started() {
-		// Add some text to the scene
-		this.text = MRE.Actor.Create(this.context, 
-			{
-				actor: {
-					name: 'Text',
-					transform: {
-						app: { position: { x: 0, y: 0.5, z: 0 } }
-					},
-					text: {
-						contents: "Cards",
-						anchor: MRE.TextAnchorLocation.MiddleCenter,
-						color: { r: 30 / 255, g: 206 / 255, b: 213 / 255 },
-						height: 0.3
-					}
-				}
-			});
+		new Table().CreateActor(this.assetContainer, this.baseUrl);
+		this.deck = new Deck();
+		this.deck.CreateActor(this.assetContainer, this.baseUrl);
 	}
 
 	/**
@@ -98,7 +90,16 @@ export default class Cards {
 			}
 		});
 
-		this.attachedCubes.set(userID, [leftHandCube, rightHandCube]);
+		const cardActor = this.deck.DrawCard().CreateActor(this.assetContainer, this.baseUrl, userID, 'left-hand');
+		// Because of the weird rotation stuff we have to do to get the cards into a reasonable orientation,
+		// the offsets for the cards in x, y, z translate to up, left, and forward respectively.
+		// the rotations in euler angles are x = pitch, y = yaw, z = roll
+		const handOffsetRotation = MRE.Quaternion.FromEulerAngles(-Math.PI / 8, -Math.PI / 6, Math.PI / 10);
+		const handOffsetPosition = new MRE.Vector3(0.05, -0.05, 0.15);
+		cardActor.transform.local.rotation.multiplyInPlace(handOffsetRotation);
+		cardActor.transform.local.position.addInPlace(handOffsetPosition);
+
+		this.attachedCubes.set(userID, [leftHandCube, rightHandCube, cardActor]);
 	}
 
 	/**
@@ -106,7 +107,7 @@ export default class Cards {
 	 * @param user User to remove cubes from.
 	 */
 	private removeCubes(user: MRE.User) {
-		if (this.attachedCubes.has(user.id)) { 
+		if (this.attachedCubes.has(user.id)) {
 			this.attachedCubes.get(user.id).forEach(element => { element.destroy(); })
 		}
 		this.attachedCubes.delete(user.id);
