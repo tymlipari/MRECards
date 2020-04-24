@@ -21,7 +21,7 @@ const server = new WebHost({
 	// Uncomment below to deploy locally (PC only)
 	// baseUrl: 'http://localhost:3901',
 
-	// Uncomment below to deploy locally (Hololens or VR Headset only)
+	// Uncomment below to deploy locally (All Platforms)
 	// baseUrl: 'http://<ngrok-id>.ngrok.io'
 	
 	// Uncomment below to deploy to Azure

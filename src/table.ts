@@ -10,8 +10,7 @@ export default class Table {
 	public actor: MRE.Actor = null;
 
 	public CreateActor(assetContainer: MRE.AssetContainer, baseUrl: string): MRE.Actor {
-		if (this.actor !== null)
-			throw new Error("Actor already created! Access with .actor");
+		if (this.actor !== null) { throw new Error("Actor already created! Access with .actor"); }
 
 		const tableScale = { x: 0.16, y: 0.18, z: 0.08 };
 		
