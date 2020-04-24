@@ -6,15 +6,15 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Deck from './deck';
 import Table from './table';
+import Player from './player';
 
 /**
- * Cards Application - Attaches a cube to each avatar's hand.
+ * Cards Application
  */
 export default class Cards {
 	private assetContainer: MRE.AssetContainer = null;
 	private deck: Deck = null;
-	// Container for all cubes attached to avatars' hands
-	private attachedCubes = new Map<MRE.Guid, MRE.Actor[]>();
+	private players = new Map<MRE.Guid, Player>();
 
 	/**
 	 * Constructs a new instance of this class.
@@ -44,8 +44,8 @@ export default class Cards {
 	 * @param user The user that joined the building.
 	 */
 	private userJoined(user: MRE.User) {
-		// Attach cubes to the user's hands
-		this.attachCubes(user);
+		// Create and add a new player
+		this.addPlayer(user);
 	}
 
 	/**
@@ -53,63 +53,29 @@ export default class Cards {
 	 * @param user The user that left the building.
 	 */
 	private userLeft(user: MRE.User) {
-		// Delete cubes attached to user's hands
-		this.removeCubes(user);
+		// Delete player who left
+		this.removePlayer(user);
 	}
 
 	/**
-	 * Attaches cubes to a user's hand.
-	 * @param user User to attach cubes to.
+	 * Create and add a new player
+	 * @param user The user that left the building.
 	 */
-	private attachCubes(user: MRE.User) {
-		const userID = user.id;
-
-		// Load a glTF model
-		const leftHandCube = MRE.Actor.CreateFromGltf(new MRE.AssetContainer(this.context), {
-			// at the given URL
-			uri: `${this.baseUrl}/altspace-cube.glb`,
-			actor: {
-				name: 'Left Cube',
-				transform: { local: { scale: { x: 0.05, y: 0.05, z: 0.05 } } },
-				attachment: {
-					attachPoint: "left-hand",
-					userId: userID
-				}
-			}
-		});
-
-		const rightHandCube = MRE.Actor.CreateFromGltf(new MRE.AssetContainer(this.context), {
-			uri: `${this.baseUrl}/altspace-cube.glb`,
-			actor: {
-				name: 'Right Cube',
-				transform: { local: { scale: { x: 0.05, y: 0.05, z: 0.05 } } },
-				attachment: {
-					attachPoint: "right-hand",
-					userId: userID
-				}
-			}
-		});
-
-		const cardActor = this.deck.DrawCard().CreateActor(this.assetContainer, this.baseUrl, userID, 'left-hand');
-		// Because of the weird rotation stuff we have to do to get the cards into a reasonable orientation,
-		// the offsets for the cards in x, y, z translate to up, left, and forward respectively.
-		// the rotations in euler angles are x = pitch, y = yaw, z = roll
-		const handOffsetRotation = MRE.Quaternion.FromEulerAngles(-Math.PI / 8, -Math.PI / 6, Math.PI / 10);
-		const handOffsetPosition = new MRE.Vector3(0.05, -0.05, 0.15);
-		cardActor.transform.local.rotation.multiplyInPlace(handOffsetRotation);
-		cardActor.transform.local.position.addInPlace(handOffsetPosition);
-
-		this.attachedCubes.set(userID, [leftHandCube, rightHandCube, cardActor]);
+	private addPlayer(user: MRE.User) {
+		const player = new Player(user.id);
+		this.players.set(user.id, player);
+		player.drawCards(this.assetContainer, this.baseUrl, this.deck, 2);
 	}
 
 	/**
-	 * Removes attached cubes from a user's hand.
-	 * @param user User to remove cubes from.
+	 * Removes player and cards attached to that player.
+	 * @param user User to remove.
 	 */
-	private removeCubes(user: MRE.User) {
-		if (this.attachedCubes.has(user.id)) {
-			this.attachedCubes.get(user.id).forEach(element => { element.destroy(); })
+	private removePlayer(user: MRE.User) {
+		const userId = user.id;
+		if (this.players.has(userId)) {
+			this.players.get(userId).removeCards();
+			this.players.delete(userId);
 		}
-		this.attachedCubes.delete(user.id);
 	}
 }

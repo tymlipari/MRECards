@@ -38,7 +38,7 @@ export default class Card {
 				},
 				transform: {
 					local: { scale: cardScale, rotation: cardRotation }
-				}
+				},
 			}
 		});
 
