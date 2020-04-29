@@ -32,9 +32,9 @@ export default class Deck {
 
 	constructor() {
 		for (let i = 1; i <= 13; i++) {
-			this.cards.push(new Card(i, Suit.Hearts));
-			this.cards.push(new Card(i, Suit.Diamonds));
 			this.cards.push(new Card(i, Suit.Clubs));
+			this.cards.push(new Card(i, Suit.Diamonds));
+			this.cards.push(new Card(i, Suit.Hearts));
 			this.cards.push(new Card(i, Suit.Spades));
 		}
 		this.Shuffle();
