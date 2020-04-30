@@ -6,11 +6,12 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Card, { Suit } from './card';
 import Table from './table';
+import Cards from './app';
 
 /**
  * https://stackoverflow.com/q/6274339
  * Modern version of the Fisher–Yates shuffle algorithm:
- * Shuffles array in place.
+ * shuffles array in place.
  * @param {Array} a items An array containing the items.
  */
 function shuffle(a: Card[]) {
@@ -25,7 +26,9 @@ function shuffle(a: Card[]) {
 }
 
 export default class Deck {
-	public static readonly Height = 0.1;
+	public static readonly Height = 0.03;
+	public static readonly Offset = 0.2;
+	public static readonly Scale = 1.3;
 	private cards: Card[] = [];
 	private topOfDeck = 0;
 	public actor: MRE.Actor = null;
@@ -37,38 +40,57 @@ export default class Deck {
 			this.cards.push(new Card(i, Suit.Hearts));
 			this.cards.push(new Card(i, Suit.Spades));
 		}
-		this.Shuffle();
+		this.shuffle();
 	}
 
-	public Shuffle(): void {
+	public shuffle(): void {
 		shuffle(this.cards);
 		this.topOfDeck = 0;
 	}
 
-	public DrawCard(): Card {
+	public drawCard(): Card {
 		return this.topOfDeck < this.cards.length
 			? this.cards[this.topOfDeck++]
 			: null;
 	}
 
-	public CreateActor(assetContainer: MRE.AssetContainer, baseUrl: string): MRE.Actor {
-		if (this.actor !== null) { throw new Error("Actor already created! Access with .actor"); }
+	public CreateActor(): MRE.Actor {
+		if (this.actor) { throw new Error("Actor already created! Access with .actor"); }
 
-		const deckScale = { x: 0.002, y: 0.002, z: 0.002 };
-		const deckRotation = MRE.Quaternion.FromEulerAngles(-Math.PI / 2, 0, 0);
-
-		this.actor = MRE.Actor.CreateFromGltf(assetContainer, {
-			uri: `${baseUrl}/cards/deck.glb`,
+		this.actor = MRE.Actor.Create(Cards.AssetContainer.context, {
 			actor: {
-				name: 'Deck',
 				transform: {
-					// Need to translate along x & z to account for the baked-in position of the 
-					// meshes in the gltf model we're using.
-					app: { position: { x: -0.75, y: Table.Height + Deck.Height, z: 0.1 } },
-					local: { scale: deckScale, rotation: deckRotation }
+					app: { position: { y: Table.Height, z: -Deck.Offset } },
+					local: { scale: { x: Deck.Scale, y: Deck.Scale, z: Deck.Scale } }
 				}
 			}
 		});
+		
+		this.actor.setCollider(
+			MRE.ColliderType.Box, 
+			false, 
+			{ x: Card.Dimensions.x, y: Deck.Height, z: Card.Dimensions.z });
+
+		Card.loadMaterials(); // Load materials for the cards if we haven't already.
+		for (let i = 0; i < 28; i++) {
+			MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
+				definition: Card.PrimitiveDefinition,
+				actor: {
+					name: 'Blank card',
+					parentId: this.actor.id,
+					appearance: {
+						materialId: Card.Materials[i === 0 ? 'back' : 'blank'].id,
+						enabled: true,
+					},
+					transform: {
+						local: {
+							rotation: MRE.Quaternion.FromEulerAngles(0, 0, 0),
+							position: { y: Deck.Height * (1. - i / 28.), z: Card.Dimensions.z / 2 },
+						}
+					}
+				}
+			});
+		}
 
 		return this.actor;
 	}

@@ -22,7 +22,7 @@ const server = new WebHost({
 	// baseUrl: 'http://localhost:3901',
 
 	// Uncomment below to deploy locally (All Platforms)
-	// baseUrl: 'http://<ngrok-id>.ngrok.io'
+	// baseUrl: 'http://<ngrok-id>.ngrok.io',
 	
 	// Uncomment below to deploy to Azure
 	baseUrl: 'https://mrecards.azurewebsites.net',

@@ -7,13 +7,16 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Deck from './deck';
 import Table from './table';
 import Player from './player';
+import Board from './board';
 
 /**
  * Cards Application
  */
 export default class Cards {
-	private assetContainer: MRE.AssetContainer = null;
+	public static AssetContainer: MRE.AssetContainer = null;
+	public static BaseUrl: string = null;
 	private deck: Deck = null;
+	private board: Board = null;
 	private players = new Map<MRE.Guid, Player>();
 
 	/**
@@ -22,7 +25,8 @@ export default class Cards {
 	 * @param baseUrl The baseUrl to this project's `./public` folder.
 	 */
 	constructor(private context: MRE.Context, private baseUrl: string) {
-		this.assetContainer = new MRE.AssetContainer(this.context);
+		Cards.AssetContainer = new MRE.AssetContainer(this.context);
+		Cards.BaseUrl = this.baseUrl;
 
 		// Hook the context events we're interested in.
 		this.context.onStarted(() => this.started());
@@ -34,9 +38,13 @@ export default class Cards {
 	 * Once the context is "started", initialize the app.
 	 */
 	private started() {
-		new Table().CreateActor(this.assetContainer, this.baseUrl);
+		new Table().CreateActor();
+		
 		this.deck = new Deck();
-		this.deck.CreateActor(this.assetContainer, this.baseUrl);
+		this.deck.CreateActor();
+
+		this.board = new Board();
+		this.board.CreateActor();
 	}
 
 	/**
@@ -64,7 +72,7 @@ export default class Cards {
 	private addPlayer(user: MRE.User) {
 		const player = new Player(user.id);
 		this.players.set(user.id, player);
-		player.drawCards(this.assetContainer, this.baseUrl, this.deck, 2);
+		player.drawCards(this.deck, 2);
 	}
 
 	/**

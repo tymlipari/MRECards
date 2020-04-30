@@ -12,39 +12,51 @@ import { Vector3, AttachPoint } from '@microsoft/mixed-reality-extension-sdk';
 export default class Player {
 	// Tracks cards in a player's hand
 	private hand = new Array<Card>();
-	private static defaultAttachHand: AttachPoint = 'left-hand';
+	private static defaultAttachHand: AttachPoint = 'right-hand';
 
-	constructor(private userId: MRE.Guid) {
+	constructor(private userId: MRE.Guid, private attachHand = Player.defaultAttachHand) {
 	}
 
-	public drawCards(assetContainer: MRE.AssetContainer, baseUrl: string, deck: Deck, cardsToDraw: int, attachHand = Player.defaultAttachHand) {
-		const handSwitch = attachHand == 'right-hand' ? 1 : -1;
+	public drawCards(
+		deck: Deck,
+		cardsToDraw: int) {
+		for (let i = 0; i < cardsToDraw; i++) {
+			const newCard = deck.drawCard();
+			this.hand.push(newCard);
+		}
+		this.adjustCardsInHand();
+	}
+
+	private adjustCardsInHand() {
+		const handSwitch = this.attachHand === 'right-hand' ? 1 : -1;
 		const range = Math.PI / 2;
 		const initialAngle = handSwitch * -range / 2 - Math.PI / 2;
-		const angleIncrement = handSwitch * range / cardsToDraw;
+		const angleIncrement = handSwitch * range / this.hand.length;
 
 		const leftCorner = new MRE.Vector3(0, 0, 0);
 		const rightCorner = new MRE.Vector3(0, 0, 0.008);
 
-		for (let cardIdx = 0; cardIdx < cardsToDraw; cardIdx++) {
-			const cardActor = deck.DrawCard().CreateActor(assetContainer, baseUrl, this.userId, attachHand);
+		this.hand.forEach((card, cardIdx) => {
+			const cardActor = card.actor || card.CreateActor();
+			if (!cardActor.attachment) { cardActor.attach(this.userId, this.attachHand); }
 
 			/**
 			 * NOTE: Cards pivot about their bottom centers.
 			 */
 			const cardAngle = cardIdx * angleIncrement;
 			const rotationOffsetIncrement = initialAngle + cardAngle;
-			const handOffsetRotation = MRE.Quaternion.FromEulerAngles(-Math.PI / 4, handSwitch * Math.PI / 4, handSwitch * -rotationOffsetIncrement);
-			cardActor.transform.local.rotation.multiplyInPlace(handOffsetRotation);
+			const handOffsetRotation = MRE.Quaternion.FromEulerAngles(
+				-Math.PI / 4, handSwitch * Math.PI / 4, handSwitch * -rotationOffsetIncrement);
+			cardActor.transform.local.rotation = handOffsetRotation;
 
 			const handOffsetPosition = new MRE.Vector3(handSwitch * -0.03, -0.04, 0.14);
-			cardActor.transform.local.position.addInPlace(handOffsetPosition);
+			cardActor.transform.local.position = handOffsetPosition;
 
 			// Move card position according to its desired location in the arc
 			// We push the cards back along the z-axis to avoid z-fighting
-			const cardPositionAdjustment = Vector3.Lerp(rightCorner, leftCorner, cardIdx / cardsToDraw);
+			const cardPositionAdjustment = Vector3.Lerp(rightCorner, leftCorner, cardIdx / this.hand.length);
 			cardActor.transform.local.position.addInPlace(cardPositionAdjustment)
-		}
+		});
 	}
 
 	public removeCards() {
