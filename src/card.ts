@@ -4,6 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import Cards from './app';
 
 export enum Suit {
 	Clubs = "c",
@@ -14,30 +15,29 @@ export enum Suit {
 
 export default class Card {
 	public actor: MRE.Actor = null;
-	private static materials: { [id: string]: MRE.Material } = null;
-	private static readonly cardDimensions = { x: 0.063, y: 1.0, z: 0.087 };
-	private static readonly primitiveDefinition = {
+	public static Materials: { [id: string]: MRE.Material } = null;
+	public static readonly Dimensions = { x: 0.08, y: 1.0, z: 0.11 };
+	public static readonly PrimitiveDefinition = {
 		shape: MRE.PrimitiveShape.Plane,
-		dimensions: Card.cardDimensions,
+		dimensions: Card.Dimensions,
 		uSegments: 1,
 		vSegments: 1,
 	};
 
-	public static LoadMaterials(assetContainer: MRE.AssetContainer, baseUrl: string) {
-		if (this.materials !== null) {
+	public static loadMaterials() {
+		if (this.Materials !== null) {
 			return;
 		}
 
-		this.materials = {};
+		this.Materials = {};
 
 		for (let i = 1; i <= 13; i++) {
-			Object.values(Suit).forEach((suit) =>
-			{
+			Object.values(Suit).forEach((suit) => {
 				const textureName = `${i}-${suit}`;
-				const texture = assetContainer.createTexture(textureName, {
-					uri: `${baseUrl}/cards/${textureName}.jpeg`
+				const texture = Cards.AssetContainer.createTexture(textureName, {
+					uri: `${Cards.BaseUrl}/cards/${textureName}.jpeg`
 				});
-				this.materials[textureName] = assetContainer.createMaterial(textureName, {
+				this.Materials[textureName] = Cards.AssetContainer.createMaterial(textureName, {
 					mainTextureId: texture.id,
 					mainTextureScale: { x: -1, y: 1 }
 				});
@@ -45,11 +45,21 @@ export default class Card {
 		}
 
 		{
-			const backTexture = assetContainer.createTexture('back', {
-				uri: `${baseUrl}/cards/card-back.jpeg`
+			const backTexture = Cards.AssetContainer.createTexture('back', {
+				uri: `${Cards.BaseUrl}/cards/card-back.jpeg`
 			});
-			this.materials['back'] = assetContainer.createMaterial('back', {
-				mainTextureId: backTexture.id
+			this.Materials['back'] = Cards.AssetContainer.createMaterial('back', {
+				mainTextureId: backTexture.id,
+				mainTextureScale: { x: -1, y: -1 }
+			});
+		}
+
+		{
+			const blankTexture = Cards.AssetContainer.createTexture('blank', {
+				uri: `${Cards.BaseUrl}/cards/blank-card.jpeg`
+			});
+			this.Materials['blank'] = Cards.AssetContainer.createMaterial('blank', {
+				mainTextureId: blankTexture.id
 			});
 		}
 	}
@@ -57,57 +67,51 @@ export default class Card {
 	constructor(public readonly value: number, public readonly suit: Suit) {
 	}
 
-	public CreateActor(
-		assetContainer: MRE.AssetContainer,
-		baseUrl: string,
-		userId: MRE.Guid,
-		attachPoint: MRE.AttachPoint): MRE.Actor {
-		if (this.actor !== null) { throw new Error("Actor already created! Access with .actor"); }
+	public CreateActor(): MRE.Actor {
+		if (this.actor) { throw new Error("Actor already created! Access with .actor"); }
 
-		Card.LoadMaterials(assetContainer, baseUrl); // Load materials for the cards if we haven't already.
+		Card.loadMaterials(); // Load materials for the cards if we haven't already.
 
-		this.actor = MRE.Actor.Create(assetContainer.context, {
-			actor: {
-				name: `${this.value} of ${this.suit}`,
-				attachment: {
-					attachPoint,
-					userId
-				}
-			}
+		const actorDefinition: Partial<MRE.ActorLike> = {
+			name: `${this.value} of ${this.suit}`
+		};
+
+		this.actor = MRE.Actor.Create(Cards.AssetContainer.context, {
+			actor: actorDefinition
 		});
 
-		const pivotOffset = {x: 0, y: Card.cardDimensions.z / 2, z: 0 };
+		const pivotOffset = { x: 0, y: Card.Dimensions.z / 2, z: 0 };
 
-		MRE.Actor.CreatePrimitive(assetContainer, {
-			definition: Card.primitiveDefinition,
+		MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
+			definition: Card.PrimitiveDefinition,
 			actor: {
 				name: 'Front face',
 				parentId: this.actor.id,
 				appearance: {
-					materialId: Card.materials[`${this.value}-${this.suit}`].id,
+					materialId: Card.Materials[`${this.value}-${this.suit}`].id,
 					enabled: true,
 				},
 				transform: {
-					local: { 
-						rotation: MRE.Quaternion.FromEulerAngles(Math.PI / 2, 0, Math.PI), 
+					local: {
+						rotation: MRE.Quaternion.FromEulerAngles(Math.PI / 2, 0, Math.PI),
 						position: pivotOffset,
 					}
 				}
 			}
 		});
 
-		MRE.Actor.CreatePrimitive(assetContainer, {
-			definition: Card.primitiveDefinition,
+		MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
+			definition: Card.PrimitiveDefinition,
 			actor: {
 				name: 'Back face',
 				parentId: this.actor.id,
 				appearance: {
-					materialId: Card.materials['back'].id,
+					materialId: Card.Materials['back'].id,
 					enabled: true,
 				},
 				transform: {
-					local: { 
-						rotation: MRE.Quaternion.FromEulerAngles(Math.PI / 2, 0, 0), 
+					local: {
+						rotation: MRE.Quaternion.FromEulerAngles(Math.PI / 2, 0, 0),
 						position: pivotOffset,
 					}
 				}

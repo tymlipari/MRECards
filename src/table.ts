@@ -4,18 +4,19 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import Cards from './app';
 
 export default class Table {
-	public static readonly Height = 1.32;
+	public static readonly Height = 1.04;
 	public actor: MRE.Actor = null;
 
-	public CreateActor(assetContainer: MRE.AssetContainer, baseUrl: string): MRE.Actor {
-		if (this.actor !== null) { throw new Error("Actor already created! Access with .actor"); }
+	public CreateActor(): MRE.Actor {
+		if (this.actor) { throw new Error("Actor already created! Access with .actor"); }
 
-		const tableScale = { x: 0.16, y: 0.18, z: 0.08 };
-		
-		this.actor = MRE.Actor.CreateFromGltf(assetContainer, {
-			uri: `${baseUrl}/table.glb`,
+		const tableScale = { x: 0.12, y: 0.13, z: 0.06 };
+
+		this.actor = MRE.Actor.CreateFromGltf(Cards.AssetContainer, {
+			uri: `${Cards.BaseUrl}/table.glb`,
 			actor: {
 				name: 'Table',
 				transform: {
@@ -23,6 +24,8 @@ export default class Table {
 				}
 			}
 		});
+
+		this.actor.setCollider(MRE.ColliderType.Box, false);
 
 		return this.actor;
 	}
