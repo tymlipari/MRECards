@@ -70,7 +70,7 @@ export default class Cards {
 	 * @param user The user that left the building.
 	 */
 	private addPlayer(user: MRE.User) {
-		const player = new Player(user.id);
+		const player = new Player(user);
 		this.players.set(user.id, player);
 		player.drawCards(this.deck, 2);
 	}

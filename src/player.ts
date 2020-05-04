@@ -4,17 +4,25 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import Cards from './app';
 import Card from './card';
 import Deck from './deck';
 import { int } from '@microsoft/mixed-reality-extension-sdk/built/math/types';
 import { Vector3, AttachPoint } from '@microsoft/mixed-reality-extension-sdk';
 
 export default class Player {
+	private userId: MRE.Guid;
+	private mask: MRE.GroupMask;
 	// Tracks cards in a player's hand
 	private hand = new Array<Card>();
 	private static defaultAttachHand: AttachPoint = 'right-hand';
+	
+	constructor(private user: MRE.User, private attachHand = Player.defaultAttachHand) {
+		this.userId = user.id;
 
-	constructor(private userId: MRE.Guid, private attachHand = Player.defaultAttachHand) {
+		// Create GroupMask unique to player
+		this.mask = new MRE.GroupMask(Cards.AssetContainer.context, [this.userId.toString()]);
+		user.groups = this.mask;
 	}
 
 	public drawCards(
@@ -56,6 +64,12 @@ export default class Player {
 			// We push the cards back along the z-axis to avoid z-fighting
 			const cardPositionAdjustment = Vector3.Lerp(rightCorner, leftCorner, cardIdx / this.hand.length);
 			cardActor.transform.local.position.addInPlace(cardPositionAdjustment)
+
+			// Only allow card holder to see the front of the card
+			const frontFaceActor = cardActor.findChildrenByName('Front Face', false);
+			if (frontFaceActor.length === 1) {
+				frontFaceActor[0].appearance.enabledFor = this.mask;
+			}
 		});
 	}
 
