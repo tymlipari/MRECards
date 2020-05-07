@@ -124,6 +124,8 @@ export default class Game {
 						betPerPlayer.delete(currentPlayer);
 						foldedPlayers.push(currentPlayer);
 						break;
+					case "Check":
+						break;
 				}
 
 				currentPlayer = this.nextPlayer();
