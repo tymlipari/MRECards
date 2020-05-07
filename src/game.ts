@@ -108,8 +108,8 @@ export default class Game {
 		// Perform rounds of betting until criteria to end betting is met
 		while(!bettingComplete) {
 			for(let i = 0; i < this.currentPlayers.length; i += 1) {
-				const [choice, bet] = currentPlayer.makeBetDecision(currentBet);
-				switch(choice) {
+				const [action, bet] = currentPlayer.selectBetAction(currentBet);
+				switch(action) {
 					case "Raise":
 						currentBet += Number(bet);
 						this.spendBet(currentPlayer, currentBet - betPerPlayer.get(currentPlayer));

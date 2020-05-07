@@ -27,7 +27,7 @@ export default class Player {
 		user.groups = this.mask;
 	}
 
-	public makeBetDecision(currentBet: int) {
+	public selectBetAction(currentBet: int) {
 		// TO DO: Create a menu for the player to decide which bet action to pursue (raise, call, check, fold)
 
 		const decision = ["Raise", 5];
