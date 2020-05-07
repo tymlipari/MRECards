@@ -8,6 +8,7 @@ import Deck from './deck';
 import Table from './table';
 import Player from './player';
 import Board from './board';
+import Game from './game';
 
 /**
  * Cards Application
@@ -39,12 +40,20 @@ export default class Cards {
 	 */
 	private started() {
 		new Table().CreateActor();
-		
+
+		// TO DO: Create menu to trigger game start
+		if (this.players.size > 1) { this.startGame() }
+	}
+
+	private startGame() {
 		this.deck = new Deck();
 		this.deck.CreateActor();
 
 		this.board = new Board();
 		this.board.CreateActor();
+
+		const game = new Game(this.players, this.board, this.deck, 5, 10);
+		game.playGame();
 	}
 
 	/**
@@ -71,8 +80,8 @@ export default class Cards {
 	 */
 	private addPlayer(user: MRE.User) {
 		const player = new Player(user);
+		player.playerNumber = this.players.size;
 		this.players.set(user.id, player);
-		player.drawCards(this.deck, 2);
 	}
 
 	/**
