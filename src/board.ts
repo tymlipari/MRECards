@@ -13,6 +13,7 @@ import Cards from './app';
 export default class Board {
 	private cards: Card[] = [];
 	public actor: MRE.Actor = null;
+	public pot: number = 0; 
 	
 	public pushCard(newCard: Card) {
 		if (!this.actor) { this.CreateActor(); }
