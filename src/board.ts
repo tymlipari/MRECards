@@ -8,13 +8,12 @@ import Card from './card';
 import Table from './table';
 import Deck from './deck';
 import Cards from './app';
-import { int } from '@microsoft/mixed-reality-extension-sdk/built/math/types';
 
 // https://en.wikipedia.org/wiki/Glossary_of_poker_terms#board
 export default class Board {
 	private cards: Card[] = [];
 	public actor: MRE.Actor = null;
-	public pot: int = 0; 
+	public pot: number = 0; 
 	
 	public pushCard(newCard: Card) {
 		if (!this.actor) { this.CreateActor(); }

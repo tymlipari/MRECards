@@ -7,17 +7,16 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Cards from './app';
 import Card from './card';
 import Deck from './deck';
-import { int } from '@microsoft/mixed-reality-extension-sdk/built/math/types';
 import { Vector3, AttachPoint } from '@microsoft/mixed-reality-extension-sdk';
 
 export default class Player {
-	public playerNumber: int;
+	public playerNumber: number;
 	private userId: MRE.Guid;
 	private mask: MRE.GroupMask;
 	// Tracks cards in a player's hand
 	private hand = new Array<Card>();
 	private static defaultAttachHand: AttachPoint = 'right-hand';
-	public bank: int = 200;
+	public bank: number = 200;
 	
 	constructor(private user: MRE.User, private attachHand = Player.defaultAttachHand) {
 		this.userId = user.id;
@@ -27,20 +26,20 @@ export default class Player {
 		user.groups = this.mask;
 	}
 
-	public selectBetAction(currentBet: int) {
+	public selectBetAction(currentBet: number) {
 		// TO DO: Create a menu for the player to decide which bet action to pursue (raise, call, check, fold)
 
 		const decision = ["Raise", 5];
 		return decision;
 	}
 
-	public removeBetFromBank(bet: int) {
+	public removeBetFromBank(bet: number) {
 		if (bet >= this.bank) { this.bank -= bet; }
 	}
 	
 	public drawCards(
 		deck: Deck,
-		cardsToDraw: int) {
+		cardsToDraw: number) {
 		for (let i = 0; i < cardsToDraw; i++) {
 			const newCard = deck.drawCard();
 			this.hand.push(newCard);

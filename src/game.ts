@@ -7,18 +7,17 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import Player from './player';
 import Board from './board';
 import Deck from './deck';
-import { int } from '@microsoft/mixed-reality-extension-sdk/built/math/types';
 
 export default class Game {
 	private currentPlayers: Player[];
-	private currentPlayerIndex: int = 0;
+	private currentPlayerIndex: number = 0;
 	private dealer: Player;
 
 	constructor(players: Map<MRE.Guid, Player>, 
 				private board: Board, 
 				private deck: Deck,
-				private smallBlindBet: int, 
-				private bigBlindBet: int) {
+				private smallBlindBet: number, 
+				private bigBlindBet: number) {
 		this.currentPlayers = new Array<Player>(players.size);        
 		players.forEach(player => { this.currentPlayers[player.playerNumber] = player; });
 	}
@@ -99,7 +98,7 @@ export default class Game {
 		let currentBet = 0;
 
 		// Track how much each player has bet in total throughout the round
-		const betPerPlayer = new Map<Player, int>();
+		const betPerPlayer = new Map<Player, number>();
 		this.currentPlayers.forEach(player => { betPerPlayer.set(player, currentBet) });
 
 		let foldedPlayers = new Array<Player>();
@@ -145,7 +144,7 @@ export default class Game {
 		}
 	}
 
-	private updateBettingStatus(betPerPlayer: Map<Player, int>, currentBet: int) {
+	private updateBettingStatus(betPerPlayer: Map<Player, number>, currentBet: number) {
 		if (this.currentPlayers.length === 1) { return true; }
 		betPerPlayer.forEach(bet => {
 			if (bet !== currentBet) { return false; }
@@ -153,7 +152,7 @@ export default class Game {
 		return true;
 	}
 
-	private spendBet(currentPlayer: Player, bet: int) {
+	private spendBet(currentPlayer: Player, bet: number) {
 		currentPlayer.removeBetFromBank(bet);
 		this.board.pot += bet;
 	}
