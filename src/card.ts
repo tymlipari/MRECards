@@ -4,16 +4,10 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import { CardSuit, CardDefinition } from "@rgerd/poker-rank";
 import Cards from './app';
 
-export enum Suit {
-	Clubs = "c",
-	Diamonds = "d",
-	Hearts = "h",
-	Spades = "s",
-}
-
-export default class Card {
+export default class Card implements CardDefinition {
 	public actor: MRE.Actor = null;
 	public static Materials: { [id: string]: MRE.Material } = null;
 	public static readonly Dimensions = { x: 0.08, y: 1.0, z: 0.11 };
@@ -32,7 +26,7 @@ export default class Card {
 		this.Materials = {};
 
 		for (let i = 1; i <= 13; i++) {
-			Object.values(Suit).forEach((suit) => {
+			Object.values(CardSuit).forEach((suit) => {
 				const textureName = `${i}-${suit}`;
 				const texture = Cards.AssetContainer.createTexture(textureName, {
 					uri: `${Cards.BaseUrl}/cards/${textureName}.jpeg`
@@ -64,7 +58,7 @@ export default class Card {
 		}
 	}
 
-	constructor(public readonly value: number, public readonly suit: Suit) {
+	constructor(public readonly value: number, public readonly suit: CardSuit) {
 	}
 
 	public CreateActor(): MRE.Actor {

@@ -4,7 +4,8 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import Card, { Suit } from './card';
+import { CardSuit } from "@rgerd/poker-rank";
+import Card from './card';
 import Table from './table';
 import Cards from './app';
 
@@ -35,10 +36,10 @@ export default class Deck {
 
 	constructor() {
 		for (let i = 1; i <= 13; i++) {
-			this.cards.push(new Card(i, Suit.Clubs));
-			this.cards.push(new Card(i, Suit.Diamonds));
-			this.cards.push(new Card(i, Suit.Hearts));
-			this.cards.push(new Card(i, Suit.Spades));
+			this.cards.push(new Card(i, CardSuit.Clubs));
+			this.cards.push(new Card(i, CardSuit.Diamonds));
+			this.cards.push(new Card(i, CardSuit.Hearts));
+			this.cards.push(new Card(i, CardSuit.Spades));
 		}
 		this.shuffle();
 	}
