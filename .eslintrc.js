@@ -26,31 +26,24 @@ module.exports = {
 	],
 	"rules": {
 		"block-spacing": ["warn", "always"],
-		"brace-style": ["warn", "1tbs", {"allowSingleLine": true}],
+		"brace-style": ["warn", "allman"],
 		"curly": ["warn", "all"],
 		"default-param-last": "warn",
 		"eol-last": ["warn", "always"],
 		"eqeqeq": ["error", "always"],
-		"indent": [
-			"warn",
-			"tab",
-			{
-				"MemberExpression": "off",
-				"SwitchCase": 1
-			}
-		],
+		"indent": ["error", 4],
 		"linebreak-style": [
 			"warn",
 			"windows"
 		],
 		"max-classes-per-file": ["warn", 1],
 		"max-len": ["error", 120],
-		"no-console": "error",
 		"no-div-regex": "error",
 		"no-empty": ["error", { "allowEmptyCatch": true }],
 		"no-labels": "error",
 		"no-loop-func": "error",
 		"no-multi-spaces": ["warn", {"ignoreEOLComments": true}],
+		"no-tabs": "error",
 		"no-multiple-empty-lines": "warn",
 		"no-new": "error",
 		"no-self-compare": "warn",
