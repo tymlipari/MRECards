@@ -4,6 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import * as PokerRank from "@rgerd/poker-rank";
 import Player from './player';
 import Board from './board';
 import Deck from './deck';
@@ -166,10 +167,14 @@ export default class Game {
 
 	private evaluateWinner() {
 		this.currentPlayers.forEach(player => { player.showHand() });
-
-		// TO DO: Evaluate Best Hand of Remaining Players
-
-		const winner = this.currentPlayers;
+		
+		const handRankings = PokerRank.rankHands(
+			this.currentPlayers.map((player) => player.getHand()), 
+			this.board.getFinalCards());
+		
+		// We want the players whose hands are ranked #1. This means they 
+		// share an index of 0 in the rankings array returned by PokerRank.
+		const winner = this.currentPlayers.filter((_, index) => handRankings[index] === 0);
 		this.distributePot(winner);
 	}
 

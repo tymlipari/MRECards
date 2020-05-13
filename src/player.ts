@@ -4,10 +4,11 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import { Vector3, AttachPoint } from '@microsoft/mixed-reality-extension-sdk';
+import { TexasHoldEmHand } from '@rgerd/poker-rank';
 import Cards from './app';
 import Card from './card';
 import Deck from './deck';
-import { Vector3, AttachPoint } from '@microsoft/mixed-reality-extension-sdk';
 
 export default class Player {
 	public playerNumber: number;
@@ -56,6 +57,13 @@ export default class Player {
 				frontFaceActor[0].appearance.enabledFor = mask;
 			}
 		});
+	}
+
+	public getHand(): TexasHoldEmHand {
+		if (this.hand.length !== 2) {
+			throw new Error("Player must have two cards in their hand.");
+		}
+		return [ this.hand[0], this.hand[1] ];
 	}
 
 	private adjustCardsInHand() {

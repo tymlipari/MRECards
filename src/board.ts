@@ -4,6 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import { TexasHoldEmBoard } from "@rgerd/poker-rank";
 import Card from './card';
 import Table from './table';
 import Deck from './deck';
@@ -40,6 +41,13 @@ export default class Board {
 			card.actor.destroy();
 		});
 		this.cards = [];
+	}
+
+	public getFinalCards(): TexasHoldEmBoard {
+		if (this.cards.length !== 5) {
+			throw new Error("Board must have 5 cards before calling it final.");
+		}
+		return [this.cards[0], this.cards[1], this.cards[2], this.cards[3], this.cards[4]];
 	}
 
 	public CreateActor(): MRE.Actor {
