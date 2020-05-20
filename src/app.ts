@@ -9,6 +9,7 @@ import Table from './table';
 import Player from './player';
 import Board from './board';
 import Game from './game';
+import Menu from './menu';
 
 /**
  * Cards Application
@@ -51,116 +52,43 @@ export default class Cards
 
     public createStartMenu()
     {
-        const tablePosition = this.table.actor.transform.local.position;
-
-        // Create a parent object for all the menu items.
-        const menu = MRE.Actor.Create(this.context, {});
-
-        const menuMesh = Cards.AssetContainer.createBoxMesh('Start Menu', 1, 0.6, 0.01);
-        MRE.Actor.Create(this.context, 
-            {
-                actor:
-                {
-                    name: 'Menu Background',
-                    parentId: menu.id,
-                    appearance: { meshId: menuMesh.id },
-                    transform:
-                    {
-                        local: { position: tablePosition.add(new MRE.Vector3(0, 1.3, 0.01)) }
-                    }
-                }
-            });
-
-        // Create menu button
-        const buttonMesh = Cards.AssetContainer.createBoxMesh('Button', 0.3, 0.15, 0.01);
-        const button = MRE.Actor.Create(this.context, 
-            {
-                actor: 
-                {
-                    name: 'Start Button',
-                    parentId: menu.id,
-                    appearance: { meshId: buttonMesh.id },
-                    collider: { geometry: { shape: MRE.ColliderType.Auto } },
-                    transform: 
-                    { 
-                        local: { position: tablePosition.add(new MRE.Vector3(0, 1.3, 0)) } 
-                    }
-                }
-            });
-
-        MRE.Actor.Create(this.context,
-            {
-                actor:
-                {
-                    name: 'Start Button Text',
-                    parentId: menu.id,
-                    text: 
-                    {
-                        contents: 'Start',
-                        height: 0.05,
-                        anchor: MRE.TextAnchorLocation.MiddleCenter
-                    },
-                    transform:
-                    {
-                        local: { position: tablePosition.add(new MRE.Vector3(0, 1.3, -0.02)) }
-                    }
-                }
-            });
-
-        // Create a label for the menu entry.
-        MRE.Actor.Create(this.context, 
-            {
-                actor: 
-                {
-                    parentId: menu.id,
-                    name: 'Start Menu Text',
-                    text: 
-                    {
-                        contents: 'Click Button Below to Start Game',
-                        anchor: MRE.TextAnchorLocation.MiddleCenter,
-                        height: 0.05
-                    },
-                    transform: 
-                    {
-                        local: { position: tablePosition.add(new MRE.Vector3(0, 1.5, -0.01)) }
-                    }
-                }
-            });
+        const menu = new Menu(this.context, this.table.actor.transform.local.position);
+        menu.createMenuBackground(
+            'Menu Background', 
+            new MRE.Vector3(1, 0.55, 0.01), 
+            new MRE.Vector3(0, 1.3, 0.01));
+        menu.createMenuText(
+            'Menu Text', 
+            'Click Button Below to Start Game', 
+            0.5, 
+            new MRE.Vector3(0, 1.5, -0.01));
+        const button = menu.createButtonWithText(
+            'Start Button', 
+            new MRE.Vector3(0.3, 0.15, 0.01), 
+            new MRE.Vector3(0, 1.3, 0),
+            'Start',
+            0.05);
 
         // Set a click handler on the button.
         button.setBehavior(MRE.ButtonBehavior).onClick(__ => 
         {
             if (this.players.size > 1) 
             {
-                menu.children.forEach(child => child.destroy());
-                menu.destroy();
+                menu.parentMenu.children.forEach(child => child.destroy());
+                menu.parentMenu.destroy();
                 this.startGame(); 
             }
             else
             {
-                if (menu.findChildrenByName('Error Message', false).length === 0)
+                if (menu.parentMenu.findChildrenByName('Error Message', false).length === 0)
                 {
-                    MRE.Actor.Create(this.context, 
-                        {
-                            actor: 
-                            {
-                                parentId: menu.id,
-                                name: 'Error Message',
-                                text: 
-                                {
-                                    contents: "Need more than one player to start game",
-                                    anchor: MRE.TextAnchorLocation.MiddleCenter,
-                                    height: 0.05,
-                                    color: new MRE.Color3(1, 0, 0)
-                                },
-                                transform: 
-                                {
-                                    local: { position: tablePosition.add(new MRE.Vector3(0, 1.1, -0.01)) }
-                                }
-                            }
-                        });
+                    menu.createMenuErrorText(
+                        'Error Message', 
+                        'Need more than one player to start game', 
+                        0.05, 
+                        new MRE.Vector3(0, 1.1, -0.01));
                 }
-            } 
+            }
         });
     }
 

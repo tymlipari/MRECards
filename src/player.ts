@@ -32,9 +32,16 @@ export default class Player
     public selectBetAction(currentBet: number) 
     {
         // TO DO: Create a menu for the player to decide which bet action to pursue (raise, call, check, fold)
-
-        const decision: [string, number] = ["Raise", 5];
+        const decision: [string, number] = null;
+        this.createPlayerMenu();
+        
         return decision;
+    }
+
+    private createPlayerMenu()
+    {
+        
+
     }
 
     public removeBetFromBank(bet: number) 
