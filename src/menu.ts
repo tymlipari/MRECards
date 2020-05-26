@@ -18,21 +18,31 @@ export default class Menu
 
     public createMenuBackground(name: string, dimensions: MRE.Vector3, position: MRE.Vector3)
     {
-        // TO DO: Change Color of background by importing a texture
-        const menuMesh = Cards.AssetContainer.createBoxMesh(name + ' Mesh', dimensions.x, dimensions.y, dimensions.z);
-        MRE.Actor.Create(this.context, 
-            {
-                actor:
-                {
-                    name: name,
-                    parentId: this.parentMenu.id,
-                    appearance: { meshId: menuMesh.id },
-                    transform:
-                    {
-                        local: { position: this.tablePosition.add(position) }
+        const primitiveDefinition = {
+            shape: MRE.PrimitiveShape.Plane,
+            // y and z are swapped since the texture has been rotated
+            dimensions: { x: dimensions.x, y: dimensions.z, z: dimensions.y }
+        };
+
+        const texture = Cards.AssetContainer.createTexture('background', {
+            uri: `${Cards.BaseUrl}/menu-background.jpg`
+        });
+        const material = Cards.AssetContainer.createMaterial('background-material', { mainTextureId: texture.id });
+
+        MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
+            definition: primitiveDefinition,
+            actor: {
+                name: name,
+                parentId: this.parentMenu.id,
+                appearance: { materialId: material.id },
+                transform: {
+                    local: {
+                        position: this.tablePosition.add(position),
+                        rotation: MRE.Quaternion.FromEulerAngles(-Math.PI / 2, 0, 0),
                     }
                 }
-            });
+            }
+        });
     }
 
     public createMenuText(name: string, contents: string, height: number, position: MRE.Vector3)
@@ -82,7 +92,7 @@ export default class Menu
 
     public createButton(name: string, dimensions: MRE.Vector3, position: MRE.Vector3)
     {
-        const buttonMesh = Cards.AssetContainer.createBoxMesh(name + ' Mesh', dimensions.x, dimensions.y, dimensions.z);
+        const buttonMesh = Cards.AssetContainer.createBoxMesh(name + '-mesh', dimensions.x, dimensions.y, dimensions.z);
         return MRE.Actor.Create(this.context, 
             {
                 actor: 
@@ -111,7 +121,7 @@ export default class Menu
             {
                 actor:
                 {
-                    name: name + ' Text',
+                    name: name + '-text',
                     parentId: this.parentMenu.id,
                     text: 
                     {

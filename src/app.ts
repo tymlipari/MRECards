@@ -54,16 +54,16 @@ export default class Cards
     {
         const menu = new Menu(this.context, this.table.actor.transform.local.position);
         menu.createMenuBackground(
-            'Menu Background', 
-            new MRE.Vector3(1, 0.55, 0.01), 
+            'menu-background', 
+            new MRE.Vector3(1, 0.53, 0.01), 
             new MRE.Vector3(0, 1.3, 0.01));
         menu.createMenuText(
-            'Menu Text', 
+            'menu-text', 
             'Click Button Below to Start Game', 
-            0.5, 
-            new MRE.Vector3(0, 1.5, -0.01));
+            0.05, 
+            new MRE.Vector3(0, 1.5, 0));
         const button = menu.createButtonWithText(
-            'Start Button', 
+            'start-button', 
             new MRE.Vector3(0.3, 0.15, 0.01), 
             new MRE.Vector3(0, 1.3, 0),
             'Start',
@@ -80,13 +80,13 @@ export default class Cards
             }
             else
             {
-                if (menu.parentMenu.findChildrenByName('Error Message', false).length === 0)
+                if (menu.parentMenu.findChildrenByName('error-message', false).length === 0)
                 {
                     menu.createMenuErrorText(
-                        'Error Message', 
+                        'error-message', 
                         'Need more than one player to start game', 
                         0.05, 
-                        new MRE.Vector3(0, 1.1, -0.01));
+                        new MRE.Vector3(0, 1.1, 0));
                 }
             }
         });

@@ -89,7 +89,7 @@ export default class Card implements CardDefinition
         MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
             definition: Card.PrimitiveDefinition,
             actor: {
-                name: 'Front face',
+                name: 'front-face',
                 parentId: this.actor.id,
                 appearance: {
                     materialId: Card.Materials[`${this.value}-${this.suit}`].id,
@@ -107,7 +107,7 @@ export default class Card implements CardDefinition
         MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
             definition: Card.PrimitiveDefinition,
             actor: {
-                name: 'Back face',
+                name: 'back-face',
                 parentId: this.actor.id,
                 appearance: {
                     materialId: Card.Materials['back'].id,

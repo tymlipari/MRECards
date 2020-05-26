@@ -68,7 +68,7 @@ export default class Player
     {
         this.hand.forEach(card => 
         {
-            const frontFaceActor = card.actor.findChildrenByName('Front Face', false);
+            const frontFaceActor = card.actor.findChildrenByName('front-face', false);
             if (frontFaceActor.length === 1) 
             {
                 const mask = new MRE.GroupMask(Cards.AssetContainer.context);
@@ -123,7 +123,7 @@ export default class Player
             cardActor.transform.local.position.addInPlace(cardPositionAdjustment)
 
             // Only allow card holder to see the front of the card
-            const frontFaceActor = cardActor.findChildrenByName('Front Face', false);
+            const frontFaceActor = cardActor.findChildrenByName('front-face', false);
             if (frontFaceActor.length === 1) 
             {
                 frontFaceActor[0].appearance.enabledFor = this.mask;
