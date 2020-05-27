@@ -8,6 +8,7 @@ import * as PokerRank from "@rgerd/poker-rank";
 import Player from './player';
 import Board from './board';
 import Deck from './deck';
+import Cards from './app';
 
 export default class Game 
 {
@@ -15,7 +16,8 @@ export default class Game
     private currentPlayerIndex: number = 0;
     private dealer: Player;
 
-    constructor(players: Map<MRE.Guid, Player>, 
+    constructor(private app: Cards,
+        players: Map<MRE.Guid, Player>, 
                 private board: Board, 
                 private deck: Deck,
                 private smallBlindBet: number, 
@@ -40,7 +42,8 @@ export default class Game
         this.placeBets(this.nextPlayer());
         if (this.checkForWinner()) 
         {
-            return; 
+            this.startNewGame();
+            return;
         }
 
         // Deal Flop
@@ -50,7 +53,8 @@ export default class Game
         this.placeBets(this.findPlayerAfterDealer());
         if (this.checkForWinner()) 
         {
-            return; 
+            this.startNewGame();
+            return;
         }
         
         // Deal Turn
@@ -60,7 +64,8 @@ export default class Game
         this.placeBets(this.findPlayerAfterDealer());
         if (this.checkForWinner()) 
         {
-            return; 
+            this.startNewGame();
+            return;
         }
 
         // Deal River
@@ -70,13 +75,15 @@ export default class Game
         this.placeBets(this.findPlayerAfterDealer());
         if (this.checkForWinner()) 
         {
-            return; 
+            this.startNewGame();
+            return;
         }
 
         // Determine Winner
         this.evaluateWinner();
 
-        // TO DO: Create menu to play another round of the game
+        // Request another round of the game
+        this.startNewGame();
     }
 
     private dealHole() 
@@ -142,26 +149,26 @@ export default class Game
         {
             for(let i = 0; i < this.currentPlayers.length; i += 1) 
             {
-                const [action, bet] = currentPlayer.selectBetAction(currentBet);
-                switch(action) 
+                switch(currentPlayer.selectBetAction(currentBet)) 
                 {
-                case "Raise":
-                    currentBet += bet;
+                case 'Raise':
+                    currentBet += currentPlayer.raiseAmount;
                     this.spendBet(currentPlayer, currentBet - betPerPlayer.get(currentPlayer));
                     betPerPlayer.set(currentPlayer, currentBet);
                     break;
-                case "Call":
+                case 'Call':
                     this.spendBet(currentPlayer, currentBet - betPerPlayer.get(currentPlayer));
                     betPerPlayer.set(currentPlayer, currentBet);
                     break;
-                case "Fold":
+                case 'Fold':
                     currentPlayer.showHand();
                     betPerPlayer.delete(currentPlayer);
                     foldedPlayers.push(currentPlayer);
                     break;
-                case "Check":
+                case 'Check':
                     break;
                 }
+                currentPlayer.raiseAmount = 0;
                 currentPlayer = this.nextPlayer();
             }
 
@@ -172,10 +179,8 @@ export default class Game
             });
             foldedPlayers = [];
 
-            /*
-             * Betting ends when all players have had a chance to act and all players who haven't folded yet 
-             * have bet the same amount of money
-             */
+            // Betting ends when all players have had a chance to act and all players who haven't folded yet 
+            // have bet the same amount of money
             bettingComplete = this.updateBettingStatus(betPerPlayer, currentBet)     
         }
     }
@@ -226,6 +231,13 @@ export default class Game
         // share an index of 0 in the rankings array returned by PokerRank.
         const winner = this.currentPlayers.filter((_, index) => handRankings[index] === 0);
         this.distributePot(winner);
+    }
+
+    private startNewGame()
+    {
+        this.deck.actor.destroy();
+        this.board.actor.destroy();
+        this.app.createStartMenu();
     }
 
     private distributePot(winner: Player[]) 

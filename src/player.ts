@@ -14,12 +14,14 @@ import Menu from './menu';
 export default class Player 
 {
     public playerNumber: number;
+    public bank: number = 200;
+    public raiseAmount: number = 0;
+    private decision: string = null;
     private userId: MRE.Guid;
     private mask: MRE.GroupMask;
     // Tracks cards in a player's hand
     private hand = new Array<Card>();
     private static defaultAttachHand: AttachPoint = 'right-hand';
-    public bank: number = 200;
     
     constructor(private user: MRE.User, private attachHand = Player.defaultAttachHand) 
     {
@@ -32,20 +34,31 @@ export default class Player
 
     public selectBetAction(currentBet: number) 
     {
-        // TO DO: Create a menu for the player to decide which bet action to pursue (raise, call, check, fold)
-        const decision: [string, number] = null;
         this.createPlayerMenu();
+
+        let betDecision = null;
+        while (betDecision === null)
+        {
+            betDecision = this.checkDecision();
+        }
         
-        return decision;
+        this.decision = null;
+        return betDecision;
+    }
+
+    private checkDecision()
+    {
+        return this.decision;
     }
 
     private createPlayerMenu()
     {
-        const distanceFromHead = 1.2;
-
+        // Attach parent menu to head
         const menu = new Menu(Cards.AssetContainer.context);
         menu.parentMenu.attach(this.userId, 'head');
+        const distanceFromHead = 1.2;
 
+        // Set up menu background
         menu.createMenuBackground(
             'menu-background', 
             new MRE.Vector3(1, 0.8, 0.01), 
@@ -56,17 +69,16 @@ export default class Player
             0.05,
             new MRE.Vector3(0, 0.3, distanceFromHead));
 
-        this.drawActionNamesAndButtons(menu, distanceFromHead);
+        this.drawBetActionTextAndButtons(menu, distanceFromHead);
     }
 
-    private drawActionNamesAndButtons(menu: Menu, distanceFromHead: number)
+    private drawBetActionTextAndButtons(menu: Menu, distanceFromHead: number)
     {
         let y = 0.2
-
         const actionNames = ['Fold', 'Check', 'Call', 'Raise'];
         actionNames.forEach(name => 
         {
-            menu.createButton(
+            const button = menu.createButton(
                 name + '-button',
                 new MRE.Vector3(0.065, 0.065, 0.01),
                 new MRE.Vector3(-0.4, y, distanceFromHead)
@@ -79,11 +91,55 @@ export default class Player
                 MRE.TextAnchorLocation.MiddleLeft
             );
             y -= 0.1
-        });
 
+            // TO DO: Add error handling for button actions
+            switch(name)
+            {
+            case 'Fold':
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleFold(menu));
+                break;
+            case 'Call':
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCall(menu));
+                break;
+            case 'Check':
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCheck(menu));
+                break;
+            case 'Raise':
+                this.handleRaiseAmount(menu, distanceFromHead, y);
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleRaise(menu));
+                break;
+            }
+        });
+    }
+
+    private handleFold(menu: Menu)
+    {
+        menu.destroy();
+        this.decision = 'Fold';
+    }
+
+    private handleCall(menu: Menu)
+    {
+        menu.destroy();
+        this.decision = 'Call';
+    }
+
+    private handleCheck(menu: Menu)
+    {
+        menu.destroy();
+        this.decision = 'Check';
+    }
+
+    private handleRaise(menu: Menu)
+    {
+        menu.destroy();
+        this.decision = 'Raise';
+    }
+
+    private handleRaiseAmount(menu: Menu, distanceFromHead: number, y: number)
+    {
         // Handle text and buttons for adjusting raise amount
         const raiseAmountY = y + 0.04;
-        const raiseAmount = 0;
         menu.createMenuText(
             'Raise-amount-text',
             'Raise Amount:',
@@ -91,26 +147,44 @@ export default class Player
             new MRE.Vector3(-0.3, raiseAmountY, distanceFromHead),
             MRE.TextAnchorLocation.MiddleLeft
         )
-        menu.createMenuText(
+        const raiseAmountText = menu.createMenuText(
             'Raise-amount-number',
-            raiseAmount.toString(),
+            this.raiseAmount.toString(),
             0.04,
             new MRE.Vector3(0, raiseAmountY, distanceFromHead)
         )
-        menu.createButtonWithText(
+
+        const addButton = menu.createButtonWithText(
             'add-amount',
             new MRE.Vector3(0.05, 0.05, 0.01),
             new MRE.Vector3(0.05, raiseAmountY + 0.03, distanceFromHead),
             '+',
             0.04
         )
-        menu.createButtonWithText(
-            'deduct-amount',
+        addButton.setBehavior(MRE.ButtonBehavior).onClick(__ => 
+        {
+            if (this.raiseAmount < this.bank)
+            {
+                this.raiseAmount += 1;
+                raiseAmountText.text.contents = this.raiseAmount.toString();
+            }
+        });
+
+        const subtractButton = menu.createButtonWithText(
+            'subtract-amount',
             new MRE.Vector3(0.05, 0.05, 0.01),
             new MRE.Vector3(0.05, raiseAmountY - 0.03, distanceFromHead),
             '-',
             0.04
         )
+        subtractButton.setBehavior(MRE.ButtonBehavior).onClick(__ => 
+        {
+            if (this.raiseAmount > 0)
+            {
+                this.raiseAmount -= 1;
+                raiseAmountText.text.contents = this.raiseAmount.toString();
+            }
+        });
     }
 
     public removeBetFromBank(bet: number) 

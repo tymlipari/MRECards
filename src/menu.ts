@@ -149,4 +149,9 @@ export default class Menu
 
         return button;
     }
+
+    public destroy()
+    {
+        this.parentMenu.destroy();
+    }
 }

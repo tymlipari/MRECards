@@ -70,14 +70,13 @@ export default class Cards
             'Start',
             0.05);
 
-        // Set a click handler on the button.
+        // Handle when start button is clicked
         button.setBehavior(MRE.ButtonBehavior).onClick(__ => 
         {
             if (this.players.size > 1) 
             {
-                menu.parentMenu.children.forEach(child => child.destroy());
-                menu.parentMenu.destroy();
-                this.startGame(); 
+                menu.destroy();
+                this.startGame();
             }
             else
             {
@@ -102,6 +101,7 @@ export default class Cards
         this.board.CreateActor();
 
         const game = new Game(
+            this,
             this.players, 
             this.board, 
             this.deck, 
