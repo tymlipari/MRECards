@@ -52,20 +52,21 @@ export default class Cards
 
     public createStartMenu()
     {
-        const menu = new Menu(this.context, this.table.actor.transform.local.position);
+        const menu = new Menu(this.context);
+        const tablePosition = this.table.actor.transform.local.position;
         menu.createMenuBackground(
             'menu-background', 
             new MRE.Vector3(1, 0.53, 0.01), 
-            new MRE.Vector3(0, 1.3, 0.01));
+            tablePosition.add(new MRE.Vector3(0, 1.3, 0.01)));
         menu.createMenuText(
             'menu-text', 
             'Click Button Below to Start Game', 
             0.05, 
-            new MRE.Vector3(0, 1.5, 0));
+            tablePosition.add(new MRE.Vector3(0, 1.5, 0)));
         const button = menu.createButtonWithText(
             'start-button', 
             new MRE.Vector3(0.3, 0.15, 0.01), 
-            new MRE.Vector3(0, 1.3, 0),
+            tablePosition.add(new MRE.Vector3(0, 1.3, 0)),
             'Start',
             0.05);
 
@@ -86,7 +87,7 @@ export default class Cards
                         'error-message', 
                         'Need more than one player to start game', 
                         0.05, 
-                        new MRE.Vector3(0, 1.1, 0));
+                        tablePosition.add(new MRE.Vector3(0, 1.1, 0)));
                 }
             }
         });
@@ -100,7 +101,12 @@ export default class Cards
         this.board = new Board();
         this.board.CreateActor();
 
-        const game = new Game(this.players, this.board, this.deck, 5, 10);
+        const game = new Game(
+            this.players, 
+            this.board, 
+            this.deck, 
+            5, 
+            10);
         game.playGame();
     }
 

@@ -10,7 +10,7 @@ export default class Menu
 {
     public parentMenu: MRE.Actor = null;
 
-    constructor(private context: MRE.Context, private tablePosition: MRE.Vector3)
+    constructor(private context: MRE.Context)
     {
         // Create a parent object for all the menu items.
         this.parentMenu = MRE.Actor.Create(this.context, {});
@@ -29,7 +29,7 @@ export default class Menu
         });
         const material = Cards.AssetContainer.createMaterial('background-material', { mainTextureId: texture.id });
 
-        MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
+        return MRE.Actor.CreatePrimitive(Cards.AssetContainer, {
             definition: primitiveDefinition,
             actor: {
                 name: name,
@@ -37,7 +37,7 @@ export default class Menu
                 appearance: { materialId: material.id },
                 transform: {
                     local: {
-                        position: this.tablePosition.add(position),
+                        position: position,
                         rotation: MRE.Quaternion.FromEulerAngles(-Math.PI / 2, 0, 0),
                     }
                 }
@@ -45,9 +45,14 @@ export default class Menu
         });
     }
 
-    public createMenuText(name: string, contents: string, height: number, position: MRE.Vector3)
+    public createMenuText(
+        name: string, 
+        contents: string, 
+        height: number, 
+        position: MRE.Vector3, 
+        anchor?: MRE.TextAnchorLocation)
     {
-        MRE.Actor.Create(this.context, 
+        return MRE.Actor.Create(this.context, 
             {
                 actor: 
                 {
@@ -56,20 +61,25 @@ export default class Menu
                     text: 
                     {
                         contents: contents,
-                        anchor: MRE.TextAnchorLocation.MiddleCenter,
+                        anchor: anchor ?? MRE.TextAnchorLocation.MiddleCenter,
                         height: height
                     },
                     transform: 
                     {
-                        local: { position: this.tablePosition.add(position) }
+                        local: { position: position }
                     }
                 }
             });
     }
 
-    public createMenuErrorText(name: string, contents: string, height: number, position: MRE.Vector3)
+    public createMenuErrorText(
+        name: string, 
+        contents: string, 
+        height: number, 
+        position: MRE.Vector3, 
+        anchor?: MRE.TextAnchorLocation)
     {
-        MRE.Actor.Create(this.context, 
+        return MRE.Actor.Create(this.context, 
             {
                 actor: 
                 {
@@ -78,13 +88,13 @@ export default class Menu
                     text: 
                     {
                         contents: contents,
-                        anchor: MRE.TextAnchorLocation.MiddleCenter,
+                        anchor: anchor ?? MRE.TextAnchorLocation.MiddleCenter,
                         height: height,
                         color: new MRE.Color3(1, 0, 0)
                     },
                     transform: 
                     {
-                        local: { position: this.tablePosition.add(position) }
+                        local: { position: position }
                     }
                 }
             });
@@ -103,7 +113,7 @@ export default class Menu
                     collider: { geometry: { shape: MRE.ColliderType.Auto } },
                     transform: 
                     { 
-                        local: { position: this.tablePosition.add(position) } 
+                        local: { position: position } 
                     }
                 }
             });
@@ -114,7 +124,8 @@ export default class Menu
         dimensions: MRE.Vector3, 
         position: MRE.Vector3, 
         contents: string, 
-        height: number)
+        height: number,
+        anchor?: MRE.TextAnchorLocation)
     {   
         const button = this.createButton(name, dimensions, position);
         MRE.Actor.Create(this.context,
@@ -127,12 +138,11 @@ export default class Menu
                     {
                         contents: contents,
                         height: height,
-                        anchor: MRE.TextAnchorLocation.MiddleCenter
+                        anchor: anchor ?? MRE.TextAnchorLocation.MiddleCenter
                     },
                     transform:
                     {
-                        local: { position: this.tablePosition.add(
-                            new MRE.Vector3(position.x, position.y, -position.z - 0.01)) }
+                        local: { position: position.add(new MRE.Vector3(0, 0, -dimensions.z)) }
                     }
                 }
             });

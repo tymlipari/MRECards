@@ -9,6 +9,7 @@ import { TexasHoldEmHand } from '@rgerd/poker-rank';
 import Cards from './app';
 import Card from './card';
 import Deck from './deck';
+import Menu from './menu';
 
 export default class Player 
 {
@@ -40,8 +41,76 @@ export default class Player
 
     private createPlayerMenu()
     {
-        
+        const distanceFromHead = 1.2;
 
+        const menu = new Menu(Cards.AssetContainer.context);
+        menu.parentMenu.attach(this.userId, 'head');
+
+        menu.createMenuBackground(
+            'menu-background', 
+            new MRE.Vector3(1, 0.8, 0.01), 
+            new MRE.Vector3(0, 0, distanceFromHead));
+        menu.createMenuText(
+            'heading', 
+            'Select Betting Action',
+            0.05,
+            new MRE.Vector3(0, 0.3, distanceFromHead));
+
+        this.drawActionNamesAndButtons(menu, distanceFromHead);
+    }
+
+    private drawActionNamesAndButtons(menu: Menu, distanceFromHead: number)
+    {
+        let y = 0.2
+
+        const actionNames = ['Fold', 'Check', 'Call', 'Raise'];
+        actionNames.forEach(name => 
+        {
+            menu.createButton(
+                name + '-button',
+                new MRE.Vector3(0.065, 0.065, 0.01),
+                new MRE.Vector3(-0.4, y, distanceFromHead)
+            );
+            menu.createMenuText(
+                name + '-text',
+                name,
+                0.05,
+                new MRE.Vector3(-0.3, y, distanceFromHead),
+                MRE.TextAnchorLocation.MiddleLeft
+            );
+            y -= 0.1
+        });
+
+        // Handle text and buttons for adjusting raise amount
+        const raiseAmountY = y + 0.04;
+        const raiseAmount = 0;
+        menu.createMenuText(
+            'Raise-amount-text',
+            'Raise Amount:',
+            0.04,
+            new MRE.Vector3(-0.3, raiseAmountY, distanceFromHead),
+            MRE.TextAnchorLocation.MiddleLeft
+        )
+        menu.createMenuText(
+            'Raise-amount-number',
+            raiseAmount.toString(),
+            0.04,
+            new MRE.Vector3(0, raiseAmountY, distanceFromHead)
+        )
+        menu.createButtonWithText(
+            'add-amount',
+            new MRE.Vector3(0.05, 0.05, 0.01),
+            new MRE.Vector3(0.05, raiseAmountY + 0.03, distanceFromHead),
+            '+',
+            0.04
+        )
+        menu.createButtonWithText(
+            'deduct-amount',
+            new MRE.Vector3(0.05, 0.05, 0.01),
+            new MRE.Vector3(0.05, raiseAmountY - 0.03, distanceFromHead),
+            '-',
+            0.04
+        )
     }
 
     public removeBetFromBank(bet: number) 
