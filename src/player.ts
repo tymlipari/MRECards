@@ -32,30 +32,25 @@ export default class Player
         user.groups = this.mask;
     }
 
-    public selectBetAction(currentBet: number) 
+    public selectBetAction(currentBet: number): string
     {
         this.createPlayerMenu();
 
         let betDecision = null;
         while (betDecision === null)
         {
-            betDecision = this.checkDecision();
+            betDecision = this.decision;
         }
         
         this.decision = null;
         return betDecision;
     }
 
-    private checkDecision()
-    {
-        return this.decision;
-    }
-
     private createPlayerMenu()
     {
         // Attach parent menu to head
         const menu = new Menu(Cards.AssetContainer.context);
-        menu.parentMenu.attach(this.userId, 'head');
+        menu.parentActor.attach(this.userId, 'head');
         const distanceFromHead = 1.2;
 
         // Set up menu background

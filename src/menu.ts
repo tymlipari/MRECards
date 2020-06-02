@@ -8,12 +8,12 @@ import Cards from './app';
 
 export default class Menu
 {
-    public parentMenu: MRE.Actor = null;
+    public parentActor: MRE.Actor = null;
 
     constructor(private context: MRE.Context)
     {
         // Create a parent object for all the menu items.
-        this.parentMenu = MRE.Actor.Create(this.context, {});
+        this.parentActor = MRE.Actor.Create(this.context, {});
     }
 
     public createMenuBackground(name: string, dimensions: MRE.Vector3, position: MRE.Vector3)
@@ -33,7 +33,7 @@ export default class Menu
             definition: primitiveDefinition,
             actor: {
                 name: name,
-                parentId: this.parentMenu.id,
+                parentId: this.parentActor.id,
                 appearance: { materialId: material.id },
                 transform: {
                     local: {
@@ -56,7 +56,7 @@ export default class Menu
             {
                 actor: 
                 {
-                    parentId: this.parentMenu.id,
+                    parentId: this.parentActor.id,
                     name: name,
                     text: 
                     {
@@ -83,7 +83,7 @@ export default class Menu
             {
                 actor: 
                 {
-                    parentId: this.parentMenu.id,
+                    parentId: this.parentActor.id,
                     name: name,
                     text: 
                     {
@@ -108,7 +108,7 @@ export default class Menu
                 actor: 
                 {
                     name: name,
-                    parentId: this.parentMenu.id,
+                    parentId: this.parentActor.id,
                     appearance: { meshId: buttonMesh.id },
                     collider: { geometry: { shape: MRE.ColliderType.Auto } },
                     transform: 
@@ -133,7 +133,7 @@ export default class Menu
                 actor:
                 {
                     name: name + '-text',
-                    parentId: this.parentMenu.id,
+                    parentId: this.parentActor.id,
                     text: 
                     {
                         contents: contents,
@@ -152,6 +152,6 @@ export default class Menu
 
     public destroy()
     {
-        this.parentMenu.destroy();
+        this.parentActor.destroy();
     }
 }

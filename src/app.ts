@@ -80,7 +80,7 @@ export default class Cards
             }
             else
             {
-                if (menu.parentMenu.findChildrenByName('error-message', false).length === 0)
+                if (menu.parentActor.findChildrenByName('error-message', false).length === 0)
                 {
                     menu.createMenuErrorText(
                         'error-message', 
