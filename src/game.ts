@@ -18,12 +18,13 @@ export default class Game
     private currentBet: number;
     private betPerPlayer: Map<Player, number>;
 
-    constructor(private app: Cards,
+    constructor(
+        private app: Cards,
         players: Map<MRE.Guid, Player>, 
-                private board: Board, 
-                private deck: Deck,
-                private smallBlindBet: number, 
-                private bigBlindBet: number) 
+        private board: Board, 
+        private deck: Deck,
+        private smallBlindBet: number, 
+        private bigBlindBet: number) 
     {
         this.currentPlayers = new Array<Player>(players.size);        
         players.forEach(player => 
@@ -253,6 +254,7 @@ export default class Game
 
     private startNewGame()
     {
+        this.currentPlayers.forEach(player => player.removeCards());
         this.deck.actor.destroy();
         this.board.actor.destroy();
         this.app.createStartMenu();

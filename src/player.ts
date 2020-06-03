@@ -20,6 +20,7 @@ export default class Player
     private userId: MRE.Guid;
     private mask: MRE.GroupMask;
     private game: Game;
+    private menu: Menu = null;
     // Tracks cards in a player's hand
     private hand = new Array<Card>();
     private static defaultAttachHand: AttachPoint = 'right-hand';
@@ -36,42 +37,50 @@ export default class Player
     public selectBetAction(game: Game, currentBet: number)
     {
         this.game = game;
-        this.createPlayerMenu();
+        if (this.menu === null)
+        {
+            this.createPlayerMenu();
+        }
+        else
+        {
+            this.menu.parentActor.appearance.enabled = true;
+        }
+        
     }
 
     private createPlayerMenu()
     {
         // Attach parent menu to head
-        const menu = new Menu(Cards.AssetContainer.context);
-        menu.parentActor.attach(this.userId, 'head');
+        this.menu = new Menu(Cards.AssetContainer.context);
+        this.menu.parentActor.attach(this.userId, 'head');
         const distanceFromHead = 1.2;
 
         // Set up menu background
-        menu.createMenuBackground(
+        this.menu.createMenuBackground(
             'menu-background', 
             new MRE.Vector3(1, 0.8, 0.01), 
             new MRE.Vector3(0, 0, distanceFromHead));
-        menu.createMenuText(
+        this.menu.createMenuText(
             'heading', 
             'Select Betting Action',
             0.05,
             new MRE.Vector3(0, 0.3, distanceFromHead));
 
-        this.drawBetActionTextAndButtons(menu, distanceFromHead);
+        this.drawBetActionTextAndButtons(distanceFromHead);
     }
 
-    private drawBetActionTextAndButtons(menu: Menu, distanceFromHead: number)
+    private drawBetActionTextAndButtons(distanceFromHead: number)
     {
         let y = 0.2
         const actionNames = ['Fold', 'Check', 'Call', 'Raise'];
         actionNames.forEach(name => 
         {
-            const button = menu.createButton(
+            const button = this.menu.createButton(
                 name + '-button',
                 new MRE.Vector3(0.065, 0.065, 0.01),
                 new MRE.Vector3(-0.4, y, distanceFromHead)
             );
-            menu.createMenuText(
+            this.menu.createMenuText(
                 name + '-text',
                 name,
                 0.05,
@@ -80,69 +89,68 @@ export default class Player
             );
             y -= 0.1
 
-            // TO DO: Add error handling for button actions
             switch(name)
             {
             case 'Fold':
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleFold(menu));
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleFold());
                 break;
             case 'Call':
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCall(menu));
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCall());
                 break;
             case 'Check':
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCheck(menu));
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCheck());
                 break;
             case 'Raise':
-                this.handleRaiseAmount(menu, distanceFromHead, y);
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleRaise(menu));
+                this.handleRaiseAmount(distanceFromHead, y);
+                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleRaise());
                 break;
             }
         });
     }
 
-    private handleFold(menu: Menu)
+    private handleFold()
     {
-        menu.destroy();
+        this.menu.parentActor.appearance.enabled = false;
         this.game.handleBetAction(this, 'Fold');
     }
 
-    private handleCall(menu: Menu)
+    private handleCall()
     {
-        menu.destroy();
+        this.menu.parentActor.appearance.enabled = false;
         this.game.handleBetAction(this, 'Call');
     }
 
-    private handleCheck(menu: Menu)
+    private handleCheck()
     {
-        menu.destroy();
+        this.menu.parentActor.appearance.enabled = false;
         this.game.handleBetAction(this, 'Check');
     }
 
-    private handleRaise(menu: Menu)
+    private handleRaise()
     {
-        menu.destroy();
+        this.menu.parentActor.appearance.enabled = false;
         this.game.handleBetAction(this, 'Raise');
     }
 
-    private handleRaiseAmount(menu: Menu, distanceFromHead: number, y: number)
+    private handleRaiseAmount(distanceFromHead: number, y: number)
     {
         // Handle text and buttons for adjusting raise amount
         const raiseAmountY = y + 0.04;
-        menu.createMenuText(
+        this.menu.createMenuText(
             'Raise-amount-text',
             'Raise Amount:',
             0.04,
             new MRE.Vector3(-0.3, raiseAmountY, distanceFromHead),
             MRE.TextAnchorLocation.MiddleLeft
         )
-        const raiseAmountText = menu.createMenuText(
+        const raiseAmountText = this.menu.createMenuText(
             'Raise-amount-number',
             this.raiseAmount.toString(),
             0.04,
             new MRE.Vector3(0, raiseAmountY, distanceFromHead)
         )
 
-        const addButton = menu.createButtonWithText(
+        const addButton = this.menu.createButtonWithText(
             'add-amount',
             new MRE.Vector3(0.05, 0.05, 0.01),
             new MRE.Vector3(0.05, raiseAmountY + 0.03, distanceFromHead),
@@ -158,7 +166,7 @@ export default class Player
             }
         });
 
-        const subtractButton = menu.createButtonWithText(
+        const subtractButton = this.menu.createButtonWithText(
             'subtract-amount',
             new MRE.Vector3(0.05, 0.05, 0.01),
             new MRE.Vector3(0.05, raiseAmountY - 0.03, distanceFromHead),
@@ -263,10 +271,11 @@ export default class Player
     }
 
     public removeCards() 
-    {
+    { 
         this.hand.forEach(card => 
         {
             card.actor.destroy(); 
         });
+        this.hand = new Array<Card>();
     }
 }
