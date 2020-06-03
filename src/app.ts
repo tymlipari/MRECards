@@ -150,8 +150,18 @@ export default class Cards
         const userId = user.id;
         if (this.players.has(userId)) 
         {
-            this.players.get(userId).removeCards();
+            const removedPlayer = this.players.get(userId);
             this.players.delete(userId);
+
+            removedPlayer.removeCards();
+            const removedPlayerNumber = removedPlayer.playerNumber;
+            this.players.forEach(player => 
+            {
+                if (player.playerNumber > removedPlayerNumber)
+                {
+                    player.playerNumber -= 1;
+                }
+            })
         }
     }
 }

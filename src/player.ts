@@ -10,15 +10,16 @@ import Cards from './app';
 import Card from './card';
 import Deck from './deck';
 import Menu from './menu';
+import Game from './game';
 
 export default class Player 
 {
     public playerNumber: number;
     public bank: number = 200;
     public raiseAmount: number = 0;
-    private decision: string = null;
     private userId: MRE.Guid;
     private mask: MRE.GroupMask;
+    private game: Game;
     // Tracks cards in a player's hand
     private hand = new Array<Card>();
     private static defaultAttachHand: AttachPoint = 'right-hand';
@@ -32,18 +33,10 @@ export default class Player
         user.groups = this.mask;
     }
 
-    public selectBetAction(currentBet: number): string
+    public selectBetAction(game: Game, currentBet: number)
     {
+        this.game = game;
         this.createPlayerMenu();
-
-        let betDecision = null;
-        while (betDecision === null)
-        {
-            betDecision = this.decision;
-        }
-        
-        this.decision = null;
-        return betDecision;
     }
 
     private createPlayerMenu()
@@ -110,25 +103,25 @@ export default class Player
     private handleFold(menu: Menu)
     {
         menu.destroy();
-        this.decision = 'Fold';
+        this.game.handleBetAction(this, 'Fold');
     }
 
     private handleCall(menu: Menu)
     {
         menu.destroy();
-        this.decision = 'Call';
+        this.game.handleBetAction(this, 'Call');
     }
 
     private handleCheck(menu: Menu)
     {
         menu.destroy();
-        this.decision = 'Check';
+        this.game.handleBetAction(this, 'Check');
     }
 
     private handleRaise(menu: Menu)
     {
         menu.destroy();
-        this.decision = 'Raise';
+        this.game.handleBetAction(this, 'Raise');
     }
 
     private handleRaiseAmount(menu: Menu, distanceFromHead: number, y: number)

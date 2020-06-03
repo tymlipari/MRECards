@@ -15,6 +15,8 @@ export default class Game
     private currentPlayers: Player[];
     private currentPlayerIndex: number = 0;
     private dealer: Player;
+    private currentBet: number;
+    private betPerPlayer: Map<Player, number>;
 
     constructor(private app: Cards,
         players: Map<MRE.Guid, Player>, 
@@ -39,51 +41,80 @@ export default class Game
         this.dealHole();
 
         // Round of Betting starts with player after big blind
-        this.placeBets(this.nextPlayer());
+        this.initializeBetRound(this.nextPlayer());
+    }
+
+    public handleBetAction(currentPlayer: Player, action: string)
+    {
+        if (this.betPerPlayer.get(currentPlayer) === -1)
+        {
+            this.betPerPlayer.set(currentPlayer, 0);
+        }
+
+        switch(action) 
+        {
+        case 'Raise':
+            this.currentBet += currentPlayer.raiseAmount;
+            this.spendBet(currentPlayer, this.currentBet - this.betPerPlayer.get(currentPlayer));
+            this.betPerPlayer.set(currentPlayer, this.currentBet);
+            break;
+        case 'Call':
+            this.spendBet(currentPlayer, this.currentBet - this.betPerPlayer.get(currentPlayer));
+            this.betPerPlayer.set(currentPlayer, this.currentBet);
+            break;
+        case 'Fold':
+            currentPlayer.showHand();
+            this.betPerPlayer.delete(currentPlayer);
+            this.currentPlayers.splice(this.currentPlayers.indexOf(currentPlayer), 1); 
+            break;
+        case 'Check':
+            break;
+        }
+
+        // Betting ends when all players have had a chance to act and all players who haven't folded yet 
+        // have bet the same amount of money
+        if (this.checkBettingComplete())
+        {
+            this.playNextGameStep();
+        }
+        else 
+        {
+            this.nextPlayer().selectBetAction(this, this.currentBet);
+        }
+    }
+
+    private playNextGameStep()
+    {
         if (this.checkForWinner()) 
         {
             this.startNewGame();
             return;
         }
 
-        // Deal Flop
-        this.dealFlop();
-
-        // Round of Betting starts with player after dealer
-        this.placeBets(this.findPlayerAfterDealer());
-        if (this.checkForWinner()) 
+        const cardsOnBoard = this.board.cards.length;
+        if (cardsOnBoard === 0)
         {
-            this.startNewGame();
-            return;
+            this.dealFlop();
         }
-        
-        // Deal Turn
-        this.dealCommunityCard();
-
-        // Round of Betting starts with player after dealer
-        this.placeBets(this.findPlayerAfterDealer());
-        if (this.checkForWinner()) 
+        else if (cardsOnBoard === 3 || cardsOnBoard === 4)
         {
-            this.startNewGame();
-            return;
+            // Deal Turn or River
+            this.dealCommunityCard();
         }
 
-        // Deal River
-        this.dealCommunityCard();
-
-        // Round of Betting starts with player after dealer
-        this.placeBets(this.findPlayerAfterDealer());
-        if (this.checkForWinner()) 
+        if (cardsOnBoard === 5)
         {
-            this.startNewGame();
-            return;
+            // Determine Winner
+            this.evaluateWinner();
+
+            // Request another round of the game
+            this.startNewGame();      
         }
-
-        // Determine Winner
-        this.evaluateWinner();
-
-        // Request another round of the game
-        this.startNewGame();
+        else
+        {
+            // Round of Betting starts with player after dealer
+            this.initializeBetRound(this.findPlayerAfterDealer());
+        }
     }
 
     private dealHole() 
@@ -107,7 +138,7 @@ export default class Game
         // Flop cards
         this.board.pushCard(this.deck.drawCard());
         this.board.pushCard(this.deck.drawCard());
-        this.board.pushCard(this.deck.drawCard());
+        this.board.pushCard(this.deck.drawCard());  
     }
 
     private dealCommunityCard() 
@@ -115,6 +146,7 @@ export default class Game
         // Burn a card
         this.deck.drawCard();
 
+        // Add card to board
         this.board.pushCard(this.deck.drawCard());
     }
 
@@ -130,70 +162,29 @@ export default class Game
         this.spendBet(this.nextPlayer(), this.bigBlindBet);
     }
 
-    private placeBets(currentPlayer: Player) 
+    private initializeBetRound(currentPlayer: Player)
     {
-        let currentBet = 0;
+        this.currentBet = 0;
 
-        // Track how much each player has bet in total throughout the round
-        const betPerPlayer = new Map<Player, number>();
+        this.betPerPlayer = new Map<Player, number>();
         this.currentPlayers.forEach(player => 
         {
-            betPerPlayer.set(player, currentBet) 
+            // Initialize each player with -1 to indicate they have not had a chance to act yet
+            this.betPerPlayer.set(player, -1) 
         });
 
-        let foldedPlayers = new Array<Player>();
-        
-        let bettingComplete = false;
-        // Perform rounds of betting until criteria to end betting is met
-        while(!bettingComplete) 
-        {
-            for(let i = 0; i < this.currentPlayers.length; i += 1) 
-            {
-                switch(currentPlayer.selectBetAction(currentBet)) 
-                {
-                case 'Raise':
-                    currentBet += currentPlayer.raiseAmount;
-                    this.spendBet(currentPlayer, currentBet - betPerPlayer.get(currentPlayer));
-                    betPerPlayer.set(currentPlayer, currentBet);
-                    break;
-                case 'Call':
-                    this.spendBet(currentPlayer, currentBet - betPerPlayer.get(currentPlayer));
-                    betPerPlayer.set(currentPlayer, currentBet);
-                    break;
-                case 'Fold':
-                    currentPlayer.showHand();
-                    betPerPlayer.delete(currentPlayer);
-                    foldedPlayers.push(currentPlayer);
-                    break;
-                case 'Check':
-                    break;
-                }
-                currentPlayer.raiseAmount = 0;
-                currentPlayer = this.nextPlayer();
-            }
-
-            // Remove folded players from current players
-            foldedPlayers.forEach( player => 
-            { 
-                this.currentPlayers.splice(this.currentPlayers.indexOf(player), 1); 
-            });
-            foldedPlayers = [];
-
-            // Betting ends when all players have had a chance to act and all players who haven't folded yet 
-            // have bet the same amount of money
-            bettingComplete = this.updateBettingStatus(betPerPlayer, currentBet)     
-        }
+        currentPlayer.selectBetAction(this, this.currentBet); 
     }
 
-    private updateBettingStatus(betPerPlayer: Map<Player, number>, currentBet: number) 
+    private checkBettingComplete() 
     {
         if (this.currentPlayers.length === 1) 
         {
             return true; 
         }
-        betPerPlayer.forEach(bet => 
+        this.betPerPlayer.forEach(bet => 
         {
-            if (bet !== currentBet) 
+            if (bet !== this.currentBet) 
             {
                 return false; 
             }
@@ -233,13 +224,6 @@ export default class Game
         this.distributePot(winner);
     }
 
-    private startNewGame()
-    {
-        this.deck.actor.destroy();
-        this.board.actor.destroy();
-        this.app.createStartMenu();
-    }
-
     private distributePot(winner: Player[]) 
     {
         winner.forEach(player => 
@@ -265,5 +249,12 @@ export default class Game
     {
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.currentPlayers.length;
         return this.currentPlayers[this.currentPlayerIndex];
+    }
+
+    private startNewGame()
+    {
+        this.deck.actor.destroy();
+        this.board.actor.destroy();
+        this.app.createStartMenu();
     }
 }

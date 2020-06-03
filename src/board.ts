@@ -13,7 +13,7 @@ import Cards from './app';
 // https://en.wikipedia.org/wiki/Glossary_of_poker_terms#board
 export default class Board 
 {
-    private cards: Card[] = [];
+    public cards: Card[] = [];
     public actor: MRE.Actor = null;
     public pot: number = 0; 
     
