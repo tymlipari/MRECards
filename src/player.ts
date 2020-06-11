@@ -14,6 +14,7 @@ import Game from './game';
 
 export default class Player 
 {
+    public name: string;
     public playerNumber: number;
     public bank: number = 200;
     public raiseAmount: number = 0;
@@ -25,27 +26,61 @@ export default class Player
     private hand = new Array<Card>();
     private static defaultAttachHand: AttachPoint = 'right-hand';
     
-    constructor(private user: MRE.User, private attachHand = Player.defaultAttachHand) 
+    constructor(user: MRE.User, private attachHand = Player.defaultAttachHand) 
     {
         this.userId = user.id;
+        this.name = user.name;
 
         // Create GroupMask unique to player
         this.mask = new MRE.GroupMask(Cards.AssetContainer.context, [this.userId.toString()]);
         user.groups = this.mask;
     }
 
-    public selectBetAction(game: Game, currentBet: number)
+    public selectBetAction(game: Game, showCall: boolean)
     {
         this.game = game;
+
         if (this.menu === null)
         {
             this.createPlayerMenu();
         }
         else
         {
+            this.updateAmountTexts();
             this.menu.parentActor.appearance.enabled = true;
         }
-        
+
+        // Hide/Show check and call actions on the menu if the action is possible
+        this.updateCheckCallMenuAction(showCall ? 'Call' : 'Check');
+    }
+    
+    private updateAmountTexts()
+    {
+        const bankAmountText = this.menu.parentActor.findChildrenByName('bank-amount', false);
+        if (bankAmountText.length === 1)
+        {
+            bankAmountText[0].text.contents = 'My Bank: ' + this.bank.toString();
+        }
+        const raiseAmountText = this.menu.parentActor.findChildrenByName('raise-amount-number', false);
+        if (raiseAmountText.length === 1)
+        {
+            raiseAmountText[0].text.contents = this.raiseAmount.toString();
+        }
+    }
+
+    private updateCheckCallMenuAction(action: string)
+    {
+        const text = this.menu.parentActor.findChildrenByName('Check-Call-text', false);
+        if (text.length === 1)
+        {
+            text[0].text.contents = action;
+        }
+
+        const button = this.menu.parentActor.findChildrenByName('Check-Call-button', false);
+        if (button.length === 1)
+        {
+            button[0].setBehavior(MRE.ButtonBehavior).onClick(user => this.handleBetActionClick(user, action));
+        }
     }
 
     private createPlayerMenu()
@@ -59,7 +94,7 @@ export default class Player
         this.menu.createMenuBackground(
             'menu-background', 
             new MRE.Vector3(1, 0.8, 0.01), 
-            new MRE.Vector3(0, 0, distanceFromHead));
+            new MRE.Vector3(0, 0, distanceFromHead + 0.01));
         this.menu.createMenuText(
             'heading', 
             'Select Betting Action',
@@ -71,8 +106,11 @@ export default class Player
 
     private drawBetActionTextAndButtons(distanceFromHead: number)
     {
-        let y = 0.2
-        const actionNames = ['Fold', 'Check', 'Call', 'Raise'];
+        let y = 0.2;
+
+        // Check and Call actions are on the same line since they 
+        // are never shown at the same time
+        const actionNames = ['Fold', 'Check-Call', 'Raise'];
         actionNames.forEach(name => 
         {
             const button = this.menu.createButton(
@@ -87,49 +125,30 @@ export default class Player
                 new MRE.Vector3(-0.3, y, distanceFromHead),
                 MRE.TextAnchorLocation.MiddleLeft
             );
-            y -= 0.1
 
-            switch(name)
+            y -= 0.1;
+
+            if (name === 'Fold')
             {
-            case 'Fold':
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleFold());
-                break;
-            case 'Call':
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCall());
-                break;
-            case 'Check':
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleCheck());
-                break;
-            case 'Raise':
+                button.setBehavior(MRE.ButtonBehavior).onClick(user => this.handleBetActionClick(user, 'Fold'));
+            }
+            else if (name === 'Raise')
+            {
                 this.handleRaiseAmount(distanceFromHead, y);
-                button.setBehavior(MRE.ButtonBehavior).onClick(__ => this.handleRaise());
-                break;
+                button.setBehavior(MRE.ButtonBehavior).onClick(user => this.handleBetActionClick(user, 'Raise'));
             }
         });
+
+        this.drawBankAmount(y - 0.1, distanceFromHead);
     }
 
-    private handleFold()
+    private drawBankAmount(y: number, distanceFromHead: number)
     {
-        this.menu.parentActor.appearance.enabled = false;
-        this.game.handleBetAction(this, 'Fold');
-    }
-
-    private handleCall()
-    {
-        this.menu.parentActor.appearance.enabled = false;
-        this.game.handleBetAction(this, 'Call');
-    }
-
-    private handleCheck()
-    {
-        this.menu.parentActor.appearance.enabled = false;
-        this.game.handleBetAction(this, 'Check');
-    }
-
-    private handleRaise()
-    {
-        this.menu.parentActor.appearance.enabled = false;
-        this.game.handleBetAction(this, 'Raise');
+        this.menu.createMenuText(
+            'bank-amount', 
+            'My Bank: ' + this.bank.toString(),
+            0.05,
+            new MRE.Vector3(0, y, distanceFromHead));
     }
 
     private handleRaiseAmount(distanceFromHead: number, y: number)
@@ -137,14 +156,14 @@ export default class Player
         // Handle text and buttons for adjusting raise amount
         const raiseAmountY = y + 0.04;
         this.menu.createMenuText(
-            'Raise-amount-text',
+            'raise-amount-text',
             'Raise Amount:',
             0.04,
             new MRE.Vector3(-0.3, raiseAmountY, distanceFromHead),
             MRE.TextAnchorLocation.MiddleLeft
         )
         const raiseAmountText = this.menu.createMenuText(
-            'Raise-amount-number',
+            'raise-amount-number',
             this.raiseAmount.toString(),
             0.04,
             new MRE.Vector3(0, raiseAmountY, distanceFromHead)
@@ -183,9 +202,18 @@ export default class Player
         });
     }
 
+    private handleBetActionClick(user: MRE.User, action: string)
+    {
+        if (user.id === this.userId)
+        {
+            this.menu.parentActor.appearance.enabled = false;
+            this.game.handleBetAction(this, action);
+        }
+    }
+
     public removeBetFromBank(bet: number) 
     {
-        if (bet >= this.bank) 
+        if (bet <= this.bank) 
         {
             this.bank -= bet; 
         }
@@ -210,9 +238,7 @@ export default class Player
             const frontFaceActor = card.actor.findChildrenByName('front-face', false);
             if (frontFaceActor.length === 1) 
             {
-                const mask = new MRE.GroupMask(Cards.AssetContainer.context);
-                this.user.groups = mask
-                frontFaceActor[0].appearance.enabledFor = mask;
+                frontFaceActor[0].appearance.enabled = true;
             }
         });
     }
