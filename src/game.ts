@@ -19,7 +19,7 @@ export default class Game
     private currentBet: number;
     private smallBlindPlayer: Player;
     private bigBlindPlayer: Player;
-    private betPerPlayer: Map<Player, number>;
+    private betPerPlayer: Map<Player, [number, boolean]>;
     private winnerMenu: Menu;
 
     constructor(
@@ -51,48 +51,28 @@ export default class Game
 
     public handleBetAction(currentPlayer: Player, action: string)
     {
-        const storedBet = this.betPerPlayer.get(currentPlayer);
-        if (storedBet < 0)
-        {
-            switch(storedBet)
-            {
-            case -this.smallBlindBet:
-                this.betPerPlayer.set(currentPlayer, this.smallBlindBet);
-                break;
-            case -this.bigBlindBet:
-                this.betPerPlayer.set(currentPlayer, this.bigBlindBet);
-                break;
-            case -1:
-                this.betPerPlayer.set(currentPlayer, 0);
-                break;
-            }
-        }
+        const storedBet = this.betPerPlayer.get(currentPlayer)[0];
 
         switch(action) 
         {
-        case 'Raise':
-            this.currentBet += currentPlayer.raiseAmount;
-            this.spendBet(currentPlayer, this.currentBet - this.betPerPlayer.get(currentPlayer));
-            this.betPerPlayer.set(currentPlayer, this.currentBet);
-            break;
-        case 'Call':
-            this.spendBet(currentPlayer, this.currentBet - this.betPerPlayer.get(currentPlayer));
-            this.betPerPlayer.set(currentPlayer, this.currentBet);
-            break;
         case 'Fold':
             currentPlayer.showHand();
             this.betPerPlayer.delete(currentPlayer);
             this.currentPlayers.splice(this.currentPlayers.indexOf(currentPlayer), 1);
-            if (this.currentPlayerIndex === 0)
-            {
-                this.currentPlayerIndex = this.currentPlayers.length - 1;
-            }
-            else 
-            {
-                this.currentPlayerIndex -= 1;
-            }
+            this.currentPlayerIndex = 
+                this.currentPlayerIndex === 0 ? this.currentPlayers.length - 1 : this.currentPlayerIndex - 1;
             break;
         case 'Check':
+            this.betPerPlayer.set(currentPlayer, [storedBet, true]);
+            break;
+        case 'Call':
+            this.spendBet(currentPlayer, this.currentBet - storedBet);
+            this.betPerPlayer.set(currentPlayer, [this.currentBet, true]);
+            break;
+        case 'Raise':
+            this.currentBet += currentPlayer.raiseAmount;
+            this.spendBet(currentPlayer, this.currentBet - storedBet);
+            this.betPerPlayer.set(currentPlayer, [this.currentBet, true]);
             break;
         }
 
@@ -106,8 +86,8 @@ export default class Game
         }
         else 
         {
-
-            this.nextPlayer().selectBetAction(this, this.currentBet, 0);
+            const nextPlayer = this.nextPlayer();
+            nextPlayer.selectBetAction(this, this.currentBet > this.betPerPlayer.get(nextPlayer)[0]);
         }
     }
 
@@ -194,26 +174,26 @@ export default class Game
 
     private initializeBetRound(currentPlayer: Player)
     {
-        this.betPerPlayer = new Map<Player, number>();
+        this.betPerPlayer = new Map<Player, [number, boolean]>();
 
-        // If the hole has been dealt, but not the flop, set current bet to big blind
+        // If the hole has been dealt, but not the flop, set current bet to big blind instead of 0
+        // Initialize each player with false in the tuple to indicate they have not had a chance to act yet
         if (this.board.cards.length === 0)
         {
             this.currentBet = this.bigBlindBet;
             this.currentPlayers.forEach(player => 
             {
-                // Initialize each player with a negative amount to indicate they have not had a chance to act yet
                 if (player === this.smallBlindPlayer) 
                 {
-                    this.betPerPlayer.set(player, -this.smallBlindBet);
+                    this.betPerPlayer.set(player, [this.smallBlindBet, false]);
                 }
                 else if (player === this.bigBlindPlayer)
                 {
-                    this.betPerPlayer.set(player, -this.bigBlindBet);
+                    this.betPerPlayer.set(player, [this.bigBlindBet, false]);
                 }
                 else 
                 {
-                    this.betPerPlayer.set(player, -1);
+                    this.betPerPlayer.set(player, [0, false]);
                 }
             });
         }
@@ -223,11 +203,11 @@ export default class Game
             this.currentBet = 0;
             this.currentPlayers.forEach(player => 
             {
-                this.betPerPlayer.set(player, -1); 
+                this.betPerPlayer.set(player, [0, false]); 
             });
         } 
 
-        currentPlayer.selectBetAction(this, this.currentBet, 0); 
+        currentPlayer.selectBetAction(this, this.currentBet > this.betPerPlayer.get(currentPlayer)[0]); 
     }
 
     private checkBettingComplete() 
@@ -236,13 +216,15 @@ export default class Game
         {
             return true; 
         }
-        for(const [, bet] of this.betPerPlayer)
+        for(const [, [bet, actionMade]] of this.betPerPlayer)
         {
+            if (!actionMade)
+            {
+                return false;
+            }
             if (bet !== this.currentBet) 
             {
-                {
-                    return false;
-                }
+                return false;
             }
         }
         return true;
