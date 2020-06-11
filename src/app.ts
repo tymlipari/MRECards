@@ -18,6 +18,7 @@ export default class Cards
 {
     public static AssetContainer: MRE.AssetContainer = null;
     public static BaseUrl: string = null;
+    private currentGame: Game = null;
     private deck: Deck = null;
     private board: Board = null;
     private table: Table = null;
@@ -46,6 +47,9 @@ export default class Cards
     {
         this.table = new Table();
         this.table.CreateActor();
+
+        // Initialize existing users as players in game
+        this.context.users.forEach(user => this.addPlayer(user));
 
         this.createStartMenu();
     }
@@ -94,20 +98,25 @@ export default class Cards
 
     private startGame() 
     {
+        if (this.currentGame !== null)
+        {
+            this.currentGame.removeGameActors();
+        }
+
         this.deck = new Deck();
         this.deck.CreateActor();
 
         this.board = new Board();
         this.board.CreateActor();
 
-        const game = new Game(
+        this.currentGame = new Game(
             this,
             this.players, 
             this.board, 
             this.deck, 
             5, 
             10);
-        game.playGame();
+        this.currentGame.playGame();
     }
 
     /**
