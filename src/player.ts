@@ -78,7 +78,7 @@ export default class Player
         const currentBetAmountText = this.menu.parentActor.findChildrenByName('current-bet-amount', false);
         if (currentBetAmountText.length === 1)
         {
-            currentBetAmountText[0].text.contents = 'Current Bet: ' + this.myBet.toString();
+            currentBetAmountText[0].text.contents = 'Current Bet: ' + this.currentBet.toString();
         }
     }
 
@@ -209,7 +209,7 @@ export default class Player
         )
         addButton.setBehavior(MRE.ButtonBehavior).onClick(__ => 
         {
-            if (this.raiseAmount < this.bank)
+            if (this.raiseAmount < Math.max(0, this.bank - (this.currentBet - this.myBet)))
             {
                 this.raiseAmount += 1;
                 raiseAmountText.text.contents = this.raiseAmount.toString();
@@ -231,6 +231,18 @@ export default class Player
                 raiseAmountText.text.contents = this.raiseAmount.toString();
             }
         });
+
+        const allInButton = this.menu.createButtonWithText(
+            'all-in',
+            new MRE.Vector3(0.125, 0.05, 0.01),
+            new MRE.Vector3(0.2, raiseAmountY, distanceFromHead),
+            'All In',
+            0.04);
+        allInButton.setBehavior(MRE.ButtonBehavior).onClick(__ =>
+        {
+            this.raiseAmount = Math.max(0, this.bank - (this.currentBet - this.myBet));
+            raiseAmountText.text.contents = this.raiseAmount.toString();
+        });
     }
 
     private handleBetActionClick(user: MRE.User, action: string)
@@ -247,6 +259,10 @@ export default class Player
         if (bet <= this.bank) 
         {
             this.bank -= bet; 
+        }
+        else
+        {
+            this.bank = 0;
         }
     }
     
