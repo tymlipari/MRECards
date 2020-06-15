@@ -87,7 +87,7 @@ export default class Game
         else 
         {
             const nextPlayer = this.nextPlayer();
-            nextPlayer.selectBetAction(this, this.currentBet > this.betPerPlayer.get(nextPlayer)[0]);
+            nextPlayer.selectBetAction(this, this.currentBet, this.betPerPlayer.get(nextPlayer)[0]);
         }
     }
 
@@ -207,7 +207,7 @@ export default class Game
             });
         } 
 
-        currentPlayer.selectBetAction(this, this.currentBet > this.betPerPlayer.get(currentPlayer)[0]); 
+        currentPlayer.selectBetAction(this, this.currentBet, this.betPerPlayer.get(currentPlayer)[0]); 
     }
 
     private checkBettingComplete() 

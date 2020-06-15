@@ -21,6 +21,8 @@ export default class Player
     private userId: MRE.Guid;
     private mask: MRE.GroupMask;
     private game: Game;
+    private currentBet: number;
+    private myBet: number;
     private menu: Menu = null;
     // Tracks cards in a player's hand
     private hand = new Array<Card>();
@@ -36,9 +38,11 @@ export default class Player
         user.groups = this.mask;
     }
 
-    public selectBetAction(game: Game, showCall: boolean)
+    public selectBetAction(game: Game, currentBet: number, myBet: number)
     {
         this.game = game;
+        this.currentBet = currentBet;
+        this.myBet = myBet;
 
         if (this.menu === null)
         {
@@ -51,7 +55,7 @@ export default class Player
         }
 
         // Hide/Show check and call actions on the menu if the action is possible
-        this.updateCheckCallMenuAction(showCall ? 'Call' : 'Check');
+        this.updateCheckCallMenuAction(currentBet > myBet ? 'Call' : 'Check');
     }
     
     private updateAmountTexts()
@@ -65,6 +69,16 @@ export default class Player
         if (raiseAmountText.length === 1)
         {
             raiseAmountText[0].text.contents = this.raiseAmount.toString();
+        }
+        const myBetAmountText = this.menu.parentActor.findChildrenByName('my-bet-amount', false);
+        if (myBetAmountText.length === 1)
+        {
+            myBetAmountText[0].text.contents = 'My Bet: ' + this.myBet.toString();
+        }
+        const currentBetAmountText = this.menu.parentActor.findChildrenByName('current-bet-amount', false);
+        if (currentBetAmountText.length === 1)
+        {
+            currentBetAmountText[0].text.contents = 'Current Bet: ' + this.myBet.toString();
         }
     }
 
@@ -140,6 +154,7 @@ export default class Player
         });
 
         this.drawBankAmount(y - 0.1, distanceFromHead);
+        this.drawBetAmounts(y - 0.2, distanceFromHead);
     }
 
     private drawBankAmount(y: number, distanceFromHead: number)
@@ -149,6 +164,22 @@ export default class Player
             'My Bank: ' + this.bank.toString(),
             0.05,
             new MRE.Vector3(0, y, distanceFromHead));
+    }
+
+    private drawBetAmounts(y: number, distanceFromHead: number)
+    {
+        this.menu.createMenuText(
+            'my-bet-amount', 
+            'My Bet: ' + this.myBet.toString(),
+            0.05,
+            new MRE.Vector3(-0.4, y, distanceFromHead),
+            MRE.TextAnchorLocation.MiddleLeft);
+        this.menu.createMenuText(
+            'current-bet-amount', 
+            'Current Bet: ' + this.currentBet.toString(),
+            0.05,
+            new MRE.Vector3(0.4, y, distanceFromHead),
+            MRE.TextAnchorLocation.MiddleRight);
     }
 
     private handleRaiseAmount(distanceFromHead: number, y: number)
@@ -166,13 +197,13 @@ export default class Player
             'raise-amount-number',
             this.raiseAmount.toString(),
             0.04,
-            new MRE.Vector3(0, raiseAmountY, distanceFromHead)
+            new MRE.Vector3(0.025, raiseAmountY, distanceFromHead)
         )
 
         const addButton = this.menu.createButtonWithText(
             'add-amount',
             new MRE.Vector3(0.05, 0.05, 0.01),
-            new MRE.Vector3(0.05, raiseAmountY + 0.03, distanceFromHead),
+            new MRE.Vector3(0.1, raiseAmountY + 0.03, distanceFromHead),
             '+',
             0.04
         )
@@ -188,7 +219,7 @@ export default class Player
         const subtractButton = this.menu.createButtonWithText(
             'subtract-amount',
             new MRE.Vector3(0.05, 0.05, 0.01),
-            new MRE.Vector3(0.05, raiseAmountY - 0.03, distanceFromHead),
+            new MRE.Vector3(0.1, raiseAmountY - 0.03, distanceFromHead),
             '-',
             0.04
         )
