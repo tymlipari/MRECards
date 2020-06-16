@@ -22,6 +22,7 @@ export default class Game
     private betPerPlayer: Map<Player, [number, boolean]>;
     private allInPlayers: Player[] = new Array<Player>();
     private winnerMenu: Menu;
+    private potText: MRE.Actor = null;
 
     constructor(
         private app: Cards,
@@ -40,6 +41,9 @@ export default class Game
 
     public playGame() 
     {
+        // Set up text for pot on board
+        this.drawPot();
+
         // Place bets based on blinds
         this.placeBlindBets();
 
@@ -264,6 +268,39 @@ export default class Game
     {
         currentPlayer.removeBetFromBank(bet);
         this.board.pot += bet;
+        this.drawPot();
+    }
+
+    private drawPot()
+    {
+        const contents = 'Pot: ' + this.board.pot.toString();
+        if (this.potText === null)
+        {
+            this.potText = MRE.Actor.Create(Cards.AssetContainer.context,
+                {
+                    actor:
+                    {
+                        name: 'pot-text',
+                        text:
+                        {
+                            contents: contents,
+                            height: 0.05,
+                            anchor: MRE.TextAnchorLocation.MiddleCenter
+                        },
+                        transform:
+                        {
+                            local: 
+                            { 
+                                position: this.deck.actor.transform.local.position.add(new MRE.Vector3(0, 1.3, 0))
+                            }
+                        }
+                    }
+                });
+        }
+        else
+        {
+            this.potText.text.contents = contents;
+        }
     }
 
     private checkForWinner() 
@@ -360,6 +397,7 @@ export default class Game
         {
             player.showHand() 
         });
+        this.potText.destroy();
         this.deck.actor.destroy();
         this.app.createStartMenu();
     }
