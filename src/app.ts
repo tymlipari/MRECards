@@ -171,6 +171,13 @@ export default class Cards
                     player.playerNumber -= 1;
                 }
             })
+
+            // Distribute removed player's bank to other users
+            const dividedBank = removedPlayer.bank / this.players.size;
+            this.players.forEach(player => 
+            {
+                player.bank += dividedBank 
+            });
         }
     }
 }
